@@ -12,6 +12,7 @@ public class NSCombatManager : EnemyCombatManager
 
     public Knight knight;
 
+    [Header("Getting Hit")]
     private HitData data;
 
     public bool getHit;
@@ -35,51 +36,26 @@ public class NSCombatManager : EnemyCombatManager
             1. reset hurt counts
             2. start a timer within which skeleton will not be transitioned to hurt state.
     */
-
+    [Header("Skeleton Squat")]
     public SkeletonRole currentRole;
 
+    [Header("Flanker")]
     [SerializeField] private float decideTimer;
 
-    [SerializeField] private float curDecideTimer = 0.5f;
+    [SerializeField] private float curDecideTimer;
 
     public float curDistance;
 
-    private float desiredDistance = 7f;
+    [SerializeField] private float desiredDistance;
 
-    private float distanceMargin = 2f;
-
-    public void CalculateDistance(){
-        curDistance = Vector2.Distance(transform.position, knight.transform.position);
-    }
+    [SerializeField] private float distanceMargin;
     
-    private void DecideMove(){
-        if(curDecideTimer > 0){
-            return;
-        }
+    // around 3s?
+    [SerializeField] private float flankerAttackTimer;
 
-        if(curDistance > desiredDistance + distanceMargin){
-            // skeleton is too far from the player
-            
-            // face the player
-            newSkeleton.parameter.movementManager.FlipTo(knight);
-            // move towards player.
-            newSkeleton.parameter.movementManager.WalkTowardsPlayer();
+    [SerializeField] private float curFlankerAttackTimer;
 
-        }
-        else if(curDistance < desiredDistance - distanceMargin){
-            // skeleton is too close from the player
 
-            // flee
-        }
-        else{
-            // position is just right.
-
-            // idle
-        }
-
-        // reset the timer
-        curDecideTimer = decideTimer;
-    }
     /*
         2. 1 flanker will sneak around and hunt player with a swifter speed but less HP.
             - flanker will keep distance with the player.(sneaky state). 
@@ -114,11 +90,95 @@ public class NSCombatManager : EnemyCombatManager
               
     */
     void Start(){
-        
+        curFlankerAttackTimer = flankerAttackTimer;
     }
     void Update(){
         UpdateCurInvulnerableTimer();
-        CalculateDistance();
+        
+        UpdateCurDecideTimer();
+
+        UpdateCurFlankerAttackTimer();
+    }
+
+    public void CalculateDistance(){
+        curDistance = Vector2.Distance(transform.position, knight.transform.position);
+    }
+
+    private void UpdateCurFlankerAttackTimer(){
+        if(curFlankerAttackTimer > 0){
+            curFlankerAttackTimer -= Time.deltaTime;
+        }
+    }
+
+    private void UpdateCurDecideTimer(){
+        if(curDecideTimer > 0){
+            curDecideTimer -= Time.deltaTime;
+        }
+    }
+    
+    public bool IsInFrontOfKnight(){
+        // skeleton is to the left: Ps - Pk < 0 && Lk < 0
+        // skeleton is to the right: Ps - Pk > 0 && Lk > 0
+
+        if(transform.position.x - knight.transform.position.x < 0 && knight.transform.localScale.x < 0){
+            return true;
+        } 
+        if(transform.position.x - knight.transform.position.x > 0 && knight.transform.localScale.x > 0){
+            return true;
+        }
+        return false;
+
+    }
+    public bool FlankerShouldAttack(){
+        if(curFlankerAttackTimer > 0){
+            return false;
+        }
+        else{
+            return true;
+        }
+        
+    }
+    
+    public void DecideMove(){
+        if(curDecideTimer > 0){
+            return;
+        }
+
+        if(curDistance > desiredDistance + distanceMargin){
+            // skeleton is too far from the player
+            
+            // play walk animation
+            newSkeleton.parameter.animator.Play("Walk");
+            // face the player
+            newSkeleton.parameter.movementManager.FlipTo(knight.transform);
+            // move towards player.
+            newSkeleton.parameter.movementManager.WalkTowardsPlayer();
+
+        }
+        else if(curDistance < desiredDistance - distanceMargin){
+            // skeleton is too close from the player
+
+            // play walk animation
+            newSkeleton.parameter.animator.Play("Walk");
+
+            // look away
+            newSkeleton.parameter.movementManager.LookAwayFromPlayer(knight.transform);
+            
+            // flee from the player
+            newSkeleton.parameter.movementManager.FleeAwayFromPlayer();
+            
+        }
+        else{
+            // position is just right.
+
+            // disable velocity
+            newSkeleton.parameter.movementManager.DisableVelocity();
+            // idle
+            newSkeleton.parameter.animator.Play("Idle");
+        }
+
+        // reset the timer
+        curDecideTimer = decideTimer;
     }
     private bool HaveSuperArmor(){
         return getHitCount >= randomThreshold;
@@ -276,6 +336,10 @@ public class NSCombatManager : EnemyCombatManager
 
         yield return base.AnimationFinishes("Attack2", newSkeleton.parameter.animator);
 
+        // reset timer
+        if(currentRole == SkeletonRole.Flanker){
+            GenerateRandomAndResetTimer();
+        }
         base.isAttacking = false;
     }
 
@@ -298,9 +362,15 @@ public class NSCombatManager : EnemyCombatManager
 
         yield return base.AnimationFinishes("Attack2", newSkeleton.parameter.animator);
 
+        // reset timer
+        if(currentRole == SkeletonRole.Flanker){
+            GenerateRandomAndResetTimer();
+        }
         base.isAttacking = false;
     }
-
-
-    
+    private void GenerateRandomAndResetTimer(){
+        int randomAttackInterval = UnityEngine.Random.Range(3, 6); // [3, 5)
+        flankerAttackTimer = randomAttackInterval;
+        curFlankerAttackTimer = flankerAttackTimer;
+    }
 }

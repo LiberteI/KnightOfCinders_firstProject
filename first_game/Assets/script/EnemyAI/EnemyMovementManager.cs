@@ -2,9 +2,7 @@ using UnityEngine;
 using System.Collections;
 public class EnemyMovementManager : MonoBehaviour
 {
-    [SerializeField] private float walkSpeed;
-
-    [SerializeField] private float fleeSpeed;
+    public float walkSpeed;
 
     public Transform target;
 
@@ -69,10 +67,10 @@ public class EnemyMovementManager : MonoBehaviour
         float direction = transform.position.x - target.position.x;
 
         if(direction < 0){
-            RB.linearVelocity = new Vector2(-1 * fleeSpeed, RB.linearVelocity.y);
+            RB.linearVelocity = new Vector2(-1 * walkSpeed, RB.linearVelocity.y);
         }
         else{
-            RB.linearVelocity = new Vector2(1 * fleeSpeed, RB.linearVelocity.y);
+            RB.linearVelocity = new Vector2(1 * walkSpeed, RB.linearVelocity.y);
         }
     }
 }

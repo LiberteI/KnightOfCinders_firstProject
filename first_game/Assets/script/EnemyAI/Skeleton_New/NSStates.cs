@@ -51,13 +51,14 @@ public class NSWalkState : StateTransitionInterface
     }
 
     public void OnUpdate(){
-        if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
+        if(parameter.nsCombatManager.currentRole != SkeletonRole.Backuper){
             parameter.movementManager.FlipTo(parameter.target);
             parameter.movementManager.WalkTowardsPlayer();
             if(parameter.combatManager.PlayerIsInRange()){
                 manager.TransitionState(NSStateType.Attack);
             }
         }
+        
     }
 
     public void OnExit(){
@@ -122,6 +123,10 @@ public class NSHurtState : StateTransitionInterface
         if(parameter.nsCombatManager.getHit){
             return;
         }
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Flanker){
+            manager.TransitionState(NSStateType.Sneak);
+            return;
+        }
         manager.TransitionState(NSStateType.Idle);
     }
 
@@ -182,6 +187,14 @@ public class NSAttackState : StateTransitionInterface
                 parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack3());
             }
         }
+        else{
+            if(parameter.nsCombatManager.IsInFrontOfKnight()){
+                parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack2());
+            }
+            else{
+                parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack3());
+            }
+        }
         
         
     }
@@ -195,6 +208,9 @@ public class NSAttackState : StateTransitionInterface
         }
         else if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
             manager.TransitionState(NSStateType.Idle);
+        }
+        else{
+            manager.TransitionState(NSStateType.Sneak);
         }
         
     }
@@ -217,11 +233,16 @@ public class NSSneakState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        
+        parameter.animator.Play("Walk");
     }
 
     public void OnUpdate(){
-        
+        if(parameter.nsCombatManager.FlankerShouldAttack()){
+            manager.TransitionState(NSStateType.Walk);
+            return;
+        }
+        parameter.nsCombatManager.CalculateDistance();
+        parameter.nsCombatManager.DecideMove();
     }
 
     public void OnExit(){

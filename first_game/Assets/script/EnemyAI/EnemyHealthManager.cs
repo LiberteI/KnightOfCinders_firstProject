@@ -2,14 +2,15 @@ using UnityEngine;
 
 public class EnemyHealthManager : MonoBehaviour
 {
-    [SerializeField] private float maxHealth;
+    public float maxHealth;
 
-    [SerializeField] private float curHealth;
+    public float curHealth;
 
     public bool isDead;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
-    {
+    {   
+        
         curHealth = maxHealth;
         EventManager.RaiseEnemyHealthChanged(this.gameObject, curHealth, maxHealth);
     }
