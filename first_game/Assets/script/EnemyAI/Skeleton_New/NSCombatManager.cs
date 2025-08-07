@@ -8,9 +8,9 @@ public enum NSAttackType{
 public class NSCombatManager : EnemyCombatManager
 {
 
-    [SerializeField] private NewSkeleton newSkeleton;
+    public NewSkeleton newSkeleton;
 
-    [SerializeField] private Knight knight;
+    public Knight knight;
 
     private HitData data;
 
@@ -22,28 +22,11 @@ public class NSCombatManager : EnemyCombatManager
     
     [SerializeField] private float curInvulnerableTimer;
     private float invulnerableTimer = 5f; // 5 seconds
+
+    
+
     /*
-        Scenario: a group of skeletons will cooperate to attack the player.
-        the total number could be around 5. with 1 flanker, 1 frontliner, and 3 back-uper.
-
-
-        1. 2 frontliner will hunt the player
-
-        2. flank will join the fight if player is defending for some time
-
-        3. 2 back-uper will join the fight if either of their ally falls. they replace the position that has fallen.
-            when they are watching in the back, they play defend animation and attack if player comes around.
-
-        4. Threat Level Shifting (Agro Switch)
-            Skeletons re-evaluate target every few seconds.
-
-            If player rolls too much or backs off, flanker becomes aggressive.
-
-            If frontliner is low HP, back-uppers advance even without deaths.
-
-            Purpose: Keeps combat dynamic, avoids player cheesing by backing off.
-
-        5. if a skeleton gets attacked, after the animation fully played, 
+        1. if a skeleton gets attacked, after the animation fully played,  *
             start a timer that within which, the skeleton does not transition to hurt state again but still take damage if hit
         
         psudo-code: *
@@ -51,10 +34,91 @@ public class NSCombatManager : EnemyCombatManager
             if hurt counts is above 2-5(random threshold): 
             1. reset hurt counts
             2. start a timer within which skeleton will not be transitioned to hurt state.
-    */  
+    */
 
+    public SkeletonRole currentRole;
+
+    [SerializeField] private float decideTimer;
+
+    [SerializeField] private float curDecideTimer = 0.5f;
+
+    public float curDistance;
+
+    private float desiredDistance = 7f;
+
+    private float distanceMargin = 2f;
+
+    public void CalculateDistance(){
+        curDistance = Vector2.Distance(transform.position, knight.transform.position);
+    }
+    
+    private void DecideMove(){
+        if(curDecideTimer > 0){
+            return;
+        }
+
+        if(curDistance > desiredDistance + distanceMargin){
+            // skeleton is too far from the player
+            
+            // face the player
+            newSkeleton.parameter.movementManager.FlipTo(knight);
+            // move towards player.
+            newSkeleton.parameter.movementManager.WalkTowardsPlayer();
+
+        }
+        else if(curDistance < desiredDistance - distanceMargin){
+            // skeleton is too close from the player
+
+            // flee
+        }
+        else{
+            // position is just right.
+
+            // idle
+        }
+
+        // reset the timer
+        curDecideTimer = decideTimer;
+    }
+    /*
+        2. 1 flanker will sneak around and hunt player with a swifter speed but less HP.
+            - flanker will keep distance with the player.(sneaky state). 
+              In sneaky state, the flanker maintains mid-range distance. It will decide how to move every 0.5s.
+              if the player is chasing the flanker, the flanker will retreat but not instantly. 
+              if get hit, it will retreat instantly.
+              if the player is too far away, the flanker will approach the player.
+
+              psudo-code:
+              private float decideTimer = 0.5f;
+              private float curDecideTimer;
+
+              private float curDistance; // current distance
+              private float desiredDistance; // the range that skeleton wants to keep from the player
+              private float distanceMargin; // a margin value that keeps skeleton from jittering
+               
+
+
+              Update():
+              FlipTo(player);
+              CalculateDistance();
+              if(curDecideTimer >= 0) keep deducting.
+
+              
+              if(getHit) RetreatImmediately();
+              every 0.5s: DecideMove();
+              
+              void DecideMove():
+               // too close: desiredDistance - margin ==> run away
+               // too far: desiredDistance + margin ==> sneak on player
+               // just right: [desiredDistance - margin, desiredDistance + margin] ==> idle
+              
+    */
+    void Start(){
+        
+    }
     void Update(){
         UpdateCurInvulnerableTimer();
+        CalculateDistance();
     }
     private bool HaveSuperArmor(){
         return getHitCount >= randomThreshold;
@@ -87,6 +151,10 @@ public class NSCombatManager : EnemyCombatManager
 
     }
     public override void GetHit(HitData data){
+        // does not get hit if is back-uper
+        if(currentRole == SkeletonRole.Backuper){
+            return;
+        }
         if(newSkeleton.parameter.healthManager.isDead){
             return;
         }
@@ -233,6 +301,6 @@ public class NSCombatManager : EnemyCombatManager
         base.isAttacking = false;
     }
 
-    
+
     
 }

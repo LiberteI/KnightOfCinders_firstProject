@@ -51,10 +51,12 @@ public class NSWalkState : StateTransitionInterface
     }
 
     public void OnUpdate(){
-        parameter.movementManager.FlipTo(parameter.target);
-        parameter.movementManager.WalkTowardsPlayer();
-        if(parameter.combatManager.PlayerIsInRange()){
-            manager.TransitionState(NSStateType.Attack);
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
+            parameter.movementManager.FlipTo(parameter.target);
+            parameter.movementManager.WalkTowardsPlayer();
+            if(parameter.combatManager.PlayerIsInRange()){
+                manager.TransitionState(NSStateType.Attack);
+            }
         }
     }
 
@@ -76,11 +78,24 @@ public class NSDefendState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-
+        parameter.animator.Play("Defend");
     }
 
     public void OnUpdate(){
-
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
+            manager.TransitionState(NSStateType.Idle);
+            return;
+        }
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Flanker){
+            manager.TransitionState(NSStateType.Sneak);
+            return;
+        }
+        parameter.movementManager.FlipTo(parameter.target);
+        if(parameter.combatManager.PlayerIsInRange()){
+            manager.TransitionState(NSStateType.Attack);
+        }
+        
+        // set flags here to start transitions.
     }
 
     public void OnExit(){
@@ -153,15 +168,21 @@ public class NSAttackState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        if(parameter.nsCombatManager.DecideAttack() == NSAttackType.Attack1){
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Backuper){
             parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack1());
         }
-        else if(parameter.nsCombatManager.DecideAttack() == NSAttackType.Attack2){
-            parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack2());
+        else if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
+            if(parameter.nsCombatManager.DecideAttack() == NSAttackType.Attack1){
+                parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack1());
+            }
+            else if(parameter.nsCombatManager.DecideAttack() == NSAttackType.Attack2){
+                parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack2());
+            }
+            else{
+                parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack3());
+            }
         }
-        else{
-            parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.Attack3());
-        }
+        
         
     }
 
@@ -169,7 +190,62 @@ public class NSAttackState : StateTransitionInterface
         if(parameter.nsCombatManager.isAttacking){
             return;
         }
-        manager.TransitionState(NSStateType.Idle);
+        if(parameter.nsCombatManager.currentRole == SkeletonRole.Backuper){
+            manager.TransitionState(NSStateType.Defend);
+        }
+        else if(parameter.nsCombatManager.currentRole == SkeletonRole.Frontliner){
+            manager.TransitionState(NSStateType.Idle);
+        }
+        
+    }
+
+    public void OnExit(){
+
+    }
+
+    
+}
+public class NSSneakState : StateTransitionInterface
+{
+    private NewSkeleton manager;
+
+    private NewSkeletonParameter parameter;
+
+    public NSSneakState(NewSkeleton manager){
+        this.manager = manager;
+
+        this.parameter = manager.parameter;
+    }
+    public void OnEnter(){
+        
+    }
+
+    public void OnUpdate(){
+        
+    }
+
+    public void OnExit(){
+
+    }
+}
+
+public class NSRetreatState : StateTransitionInterface
+{
+    private NewSkeleton manager;
+
+    private NewSkeletonParameter parameter;
+
+    public NSRetreatState(NewSkeleton manager){
+        this.manager = manager;
+
+        this.parameter = manager.parameter;
+    }
+    public void OnEnter(){
+        
+    }
+
+    public void OnUpdate(){
+        
     }
 
     public void OnExit(){

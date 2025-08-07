@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System;
 
 public enum NSStateType{
-    Walk, Hurt, Die, Attack, Defend, Idle
+    Walk, Hurt, Die, Attack, Defend, Idle, Sneak, Retreat
 }
 
 [Serializable]
@@ -45,7 +45,10 @@ public class NewSkeleton : MonoBehaviour
         states.Add(NSStateType.Defend, new NSDefendState(this));
         states.Add(NSStateType.Idle, new NSIdleState(this));
 
-        TransitionState(NSStateType.Idle);
+        states.Add(NSStateType.Sneak, new NSSneakState(this));
+        states.Add(NSStateType.Retreat, new NSRetreatState(this));
+        TransitionState(NSStateType.Defend);
+        
     }
 
     // Update is called once per frame
