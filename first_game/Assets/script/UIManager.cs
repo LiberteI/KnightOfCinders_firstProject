@@ -19,12 +19,12 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Slider redBar;
 
     [SerializeField] private Slider whiteBar;
-
-    [SerializeField] private float whiteSpeed;
     
     private float prevHealth;
 
-    [SerializeField] private float updateSpeed;
+    [SerializeField] private float whiteBarDeductSpeed;
+
+    [SerializeField] private float whiteBarIncreaseSpeed;
 
     private Coroutine redCoroutine;
 
@@ -123,7 +123,7 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator increaseRedBar(float target){
         while(redBar.value < target){
-            redBar.value += Time.deltaTime * updateSpeed;
+            redBar.value += Time.deltaTime * whiteBarIncreaseSpeed;
             yield return null;
         }
 
@@ -133,7 +133,7 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator decreaseWhiteBar(float target){
         while(whiteBar.value > target){
-            whiteBar.value -= Time.deltaTime * updateSpeed;
+            whiteBar.value -= Time.deltaTime * whiteBarDeductSpeed;
             yield return null;
         }
         // avoid value being not target at last

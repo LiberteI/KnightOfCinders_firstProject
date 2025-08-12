@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System;
 
 public enum NSStateType{
-    Walk, Hurt, Die, Attack, Defend, Idle, Sneak, Retreat
+    Walk, Hurt, Die, Attack, Defend, Idle, Sneak, Trap
 }
 
 [Serializable]
@@ -46,7 +46,7 @@ public class NewSkeleton : MonoBehaviour
         states.Add(NSStateType.Idle, new NSIdleState(this));
 
         states.Add(NSStateType.Sneak, new NSSneakState(this));
-        states.Add(NSStateType.Retreat, new NSRetreatState(this));
+        states.Add(NSStateType.Trap, new NSTrapState(this));
         TransitionState(NSStateType.Defend);
         
     }

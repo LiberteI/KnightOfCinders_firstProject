@@ -10,7 +10,6 @@ public class EnemyCombatManager : MonoBehaviour
 
     public bool isAttacking;
 
-
     public float damage;
     
     void Start(){

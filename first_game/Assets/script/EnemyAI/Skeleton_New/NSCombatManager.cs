@@ -224,7 +224,7 @@ public class NSCombatManager : EnemyCombatManager
         // pass data
         this.data = data;
 
-        // only respond if this object get hit.
+        // only respond if this object gets hit.
         if(data.targetHurtBox != newSkeleton.parameter.nsHurtBox){
             return;
         }
@@ -279,7 +279,7 @@ public class NSCombatManager : EnemyCombatManager
         getHit = true;
 
         // get knocked back
-        GetKnockedBack(data.knockBackDir, 5f);
+        
 
         // play animation
         newSkeleton.parameter.animator.Play("Hurt");
@@ -310,7 +310,7 @@ public class NSCombatManager : EnemyCombatManager
         // set damage
         base.isAttacking = true;
 
-        base.damage = 15f; // hardcoded damage
+        base.damage = 7f; // hardcoded damage
         
         newSkeleton.parameter.animator.Play("Attack1");
 
@@ -327,7 +327,7 @@ public class NSCombatManager : EnemyCombatManager
         // play animation
         base.isAttacking = true;
 
-        base.damage = 15f; // hardcoded damage
+        base.damage = 7f; // hardcoded damage
 
         newSkeleton.parameter.animator.Play("Attack2");
 
@@ -348,7 +348,7 @@ public class NSCombatManager : EnemyCombatManager
         // play combo animation
         base.isAttacking = true;
 
-        base.damage = 15f; // hardcoded damage
+        base.damage = 7f; // hardcoded damage
 
         // disable velocity
         newSkeleton.parameter.movementManager.DisableVelocity();

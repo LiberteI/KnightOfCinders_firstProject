@@ -51,6 +51,7 @@ public static class EventManager{
         }
     }
     public static void RaiseEnemyDied(GameObject enemy){
+        // Debug.Log($"OnEnemyDied invoked for: {enemy.name}");
         if(OnEnemyDied != null){
             OnEnemyDied(enemy);
         }

@@ -22,4 +22,8 @@ public class BarFollow : MonoBehaviour
         newScale.x = Mathf.Abs(newScale.x);
         transform.localScale = newScale;
     }
+
+    public void SetTarget(Transform target){
+        this.target = target;
+    }
 }

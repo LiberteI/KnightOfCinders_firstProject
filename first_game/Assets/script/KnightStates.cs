@@ -71,13 +71,13 @@ public class KIdleState : PlayerStateInterface
         // heavy attack combo
         if(Input.GetKeyDown("u")){
             if(parameter.combatManager.curHeavyAttack == null || parameter.combatManager.curHeavyAttack == "PowerAttack1"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack2);
                 }
                 
             }
             else if(parameter.combatManager.curHeavyAttack == "PowerAttack2"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack1);
                 }
             }
@@ -88,7 +88,7 @@ public class KIdleState : PlayerStateInterface
 
         // Shield Strick
         if(Input.GetKeyDown("h")){
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
                 manager.TransitionState(KnightStateTypes.ShieldStrike);
             }
             return;
@@ -98,7 +98,7 @@ public class KIdleState : PlayerStateInterface
         // Roll
         if(Input.GetKeyDown("l")){
             // check stamina first
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
                 manager.TransitionState(KnightStateTypes.Roll);
             }
             return;
@@ -110,7 +110,7 @@ public class KIdleState : PlayerStateInterface
         }
         // move
         if(parameter.movementManager.GetHorizontal() != 0){
-            if(Input.GetKey(KeyCode.LeftShift) && manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.Run, false) && manager.parameter.staminaManager.curStamina > 5f){
+            if(Input.GetKey(KeyCode.LeftShift) && parameter.staminaManager.DeductStamina(StaminaCostTypes.Run, false) && parameter.staminaManager.curStamina > 5f){
                 manager.TransitionState(KnightStateTypes.Run);
                 return;
             }
@@ -119,6 +119,8 @@ public class KIdleState : PlayerStateInterface
                 return;
             }
         }
+
+    
 
         
     }
@@ -175,7 +177,7 @@ public class KRunState : PlayerStateInterface
         
         // Run Attack
         if(Input.GetKeyDown("j")){
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.RunAttack, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.RunAttack, false)){
                 manager.TransitionState(KnightStateTypes.RunAttack);
             }
             return;
@@ -186,13 +188,13 @@ public class KRunState : PlayerStateInterface
         // heavy attack combo
         if(Input.GetKeyDown("u")){
             if(parameter.combatManager.curHeavyAttack == null || parameter.combatManager.curHeavyAttack == "PowerAttack1"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack2);
                 }
                 
             }
             else if(parameter.combatManager.curHeavyAttack == "PowerAttack2"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack1);
                 }
             }
@@ -201,7 +203,7 @@ public class KRunState : PlayerStateInterface
         }
         // Shield Strick
         if(Input.GetKeyDown("h")){
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
                 manager.TransitionState(KnightStateTypes.ShieldStrike);
             }
             return;
@@ -211,7 +213,7 @@ public class KRunState : PlayerStateInterface
         // roll based on run speed
         if(Input.GetKeyDown("l")){
             // check stamina first
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
                 manager.TransitionState(KnightStateTypes.Roll);
             }
             return;
@@ -284,13 +286,13 @@ public class KWalkState : PlayerStateInterface
         // heavy attack combo
         if(Input.GetKeyDown("u")){
             if(parameter.combatManager.curHeavyAttack == null || parameter.combatManager.curHeavyAttack == "PowerAttack1"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack2);
                 }
                 
             }
             else if(parameter.combatManager.curHeavyAttack == "PowerAttack2"){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
+                if(parameter.staminaManager.DeductStamina(StaminaCostTypes.HeavyAttack, false)){
                     manager.TransitionState(KnightStateTypes.HeavyAttack1);
                 }
             }
@@ -300,7 +302,7 @@ public class KWalkState : PlayerStateInterface
 
         // Shield Strick
         if(Input.GetKeyDown("h")){
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.ShieldStrike, false)){
                 manager.TransitionState(KnightStateTypes.ShieldStrike);
             }
             return;
@@ -310,7 +312,7 @@ public class KWalkState : PlayerStateInterface
         // roll based on walk speed
         if(Input.GetKeyDown("l")){
             // check stamina first
-            if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
+            if(parameter.staminaManager.DeductStamina(StaminaCostTypes.Roll, false)){
                 manager.TransitionState(KnightStateTypes.Roll);
             }
             return;
@@ -326,7 +328,7 @@ public class KWalkState : PlayerStateInterface
             return;
         }
         // transition to run if start running
-        if(Input.GetKey(KeyCode.LeftShift) && manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.Run, false) && manager.parameter.staminaManager.curStamina > 5f){
+        if(Input.GetKey(KeyCode.LeftShift) && parameter.staminaManager.DeductStamina(StaminaCostTypes.Run, false) && parameter.staminaManager.curStamina > 5f){
                 manager.TransitionState(KnightStateTypes.Run);
                 return;
             }
@@ -442,11 +444,12 @@ public class KHurtState : PlayerStateInterface
         
     }
     public void OnEnter(){
-        
+        // disable linear velocity
+        parameter.RB.linearVelocity = Vector2.zero;
     }
     public void OnUpdate(){
         // Debug.Log("in hurt state");
-        if(manager.parameter.combatManager.getHit){
+        if(parameter.combatManager.getHit){
             return;
         }
         manager.TransitionState(KnightStateTypes.Idle);
@@ -456,7 +459,8 @@ public class KHurtState : PlayerStateInterface
     public void HandleInput(){}
     public void OnGetHit(HitData data){
         incomingHitData = data;
-        manager.parameter.combatManager.StartCoroutine(manager.parameter.combatManager.ExecuteGetHit(incomingHitData));
+        parameter.combatManager.StartCoroutine(parameter.combatManager.ExecuteGetHit(incomingHitData));
+       
     }
 
 }
@@ -523,14 +527,6 @@ public class KDefendState : PlayerStateInterface
     public void HandleInput(){
         if(!Input.GetKey("s")){
             manager.TransitionState(KnightStateTypes.Idle);
-        }
-        else{
-            if(Input.GetKeyDown("j")){
-                if(manager.parameter.staminaManager.DeductStamina(StaminaCostTypes.LightAttack, false)){
-                    manager.TransitionState(KnightStateTypes.Attack2);
-                }
-                
-            }
         }
     }
     public void OnGetHit(HitData data){

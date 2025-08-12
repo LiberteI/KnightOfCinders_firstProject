@@ -250,19 +250,19 @@ public class NSSneakState : StateTransitionInterface
     }
 }
 
-public class NSRetreatState : StateTransitionInterface
+public class NSTrapState : StateTransitionInterface
 {
     private NewSkeleton manager;
 
     private NewSkeletonParameter parameter;
 
-    public NSRetreatState(NewSkeleton manager){
+    public NSTrapState(NewSkeleton manager){
         this.manager = manager;
 
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        
+        parameter.animator.Play("Die");
     }
 
     public void OnUpdate(){

@@ -22,7 +22,16 @@ public class MovementManager : MonoBehaviour
 
     public float shieldStrikeSpeed;
 
-    
+    [Header("SWIM")]
+    [SerializeField] private LayerMask Water;
+
+    [SerializeField] private Transform body;
+
+    [SerializeField] private float bodyRadius;
+
+    public float vertical;
+
+    [SerializeField] private float swimSpeed;
 
     [Header("JUMP")]
     [SerializeField] private Transform groundCheck;
@@ -58,7 +67,7 @@ public class MovementManager : MonoBehaviour
     void Update()
     {   
         Flip();
-        
+        ReadVertical();
         ReadHorizontal();
         DecideCanJump();
         CheckIfHasJustLanded();
@@ -71,11 +80,16 @@ public class MovementManager : MonoBehaviour
         else{
             Walk();
         }
+        Swim();
         
     }
 
     public void SetIsRunning(bool value){
         run = value;
+    }
+
+    public void ReadVertical(){
+        vertical = Input.GetAxisRaw("Vertical");
     }
     public void ReadHorizontal(){
         horizontal = Input.GetAxisRaw("Horizontal");
@@ -183,6 +197,7 @@ public class MovementManager : MonoBehaviour
         if(knight.parameter.combatManager.getHit){
             return false;
         }
+        
         return true;
     }
     public bool CanRoll(){
@@ -291,7 +306,11 @@ public class MovementManager : MonoBehaviour
     }
 
     private void OnDrawGizmosSelected(){
+        Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(body.position, bodyRadius);
     }
 
     private IEnumerator StartJumpCoolDown(){
@@ -301,4 +320,24 @@ public class MovementManager : MonoBehaviour
             yield return null;
         }
     } 
+
+    public void Swim(){
+        // Debug.Log(IsInSewer());
+        if(!IsInSewer()){
+            knight.parameter.RB.gravityScale = 5f;
+            knight.parameter.RB.linearDamping = 0f;
+            return;
+        }
+        knight.parameter.RB.gravityScale = 1f;
+        knight.parameter.RB.linearDamping = 30f;
+
+        knight.parameter.RB.linearVelocity = new Vector2(knight.parameter.RB.linearVelocity.x, vertical * swimSpeed);
+    }
+
+    private bool IsInSewer(){
+        
+        return Physics2D.OverlapCircle(body.position, bodyRadius, Water);
+    }
+
+    
 }

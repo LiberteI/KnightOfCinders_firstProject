@@ -68,7 +68,7 @@ public class SkeletonCoordinator : MonoBehaviour
             Purpose: Keeps combat dynamic, avoids player cheesing.
 
     */  
-    [SerializeField] private GameObject skeletonPrefab;
+    [SerializeField] private GameObject skeletonContainerPrefab;
 
     private List<NSCombatManager> skeletons = new List<NSCombatManager>();
 
@@ -96,8 +96,21 @@ public class SkeletonCoordinator : MonoBehaviour
             spPoint.y = 4f;
             spPoint.z = 2f;
 
-            GameObject instance = Instantiate(skeletonPrefab, spPoint, Quaternion.identity);
-            NSCombatManager cm = instance.GetComponentInChildren<NSCombatManager>();
+            // instantiate skeleton container
+            GameObject containerInstance = Instantiate(skeletonContainerPrefab, spPoint, Quaternion.identity);
+
+            // get the skeleton child of the container
+            GameObject skeletonInstance = containerInstance.transform.Find("Skeleton_New").gameObject;
+            
+            // get the health bar and its script
+            GameObject healthBarInstance = containerInstance.transform.Find("HealthBar").gameObject;
+
+            BarFollow barFollowScript = healthBarInstance.GetComponent<BarFollow>();
+            // set follow instance
+
+            barFollowScript.SetTarget(skeletonInstance.transform);
+
+            NSCombatManager cm = skeletonInstance.GetComponentInChildren<NSCombatManager>();
             skeletons.Add(cm);
 
             // assign default role
@@ -109,7 +122,7 @@ public class SkeletonCoordinator : MonoBehaviour
             skeletons[i].newSkeleton.parameter.movementManager.target = knightTransform;
 
             // set active
-            instance.SetActive(true);
+            containerInstance.SetActive(true);
         }
     }
     void Start(){
@@ -117,7 +130,7 @@ public class SkeletonCoordinator : MonoBehaviour
             Debug.Log("count is too small.");
             return;
         }
-        if(skeletonPrefab == null){
+        if(skeletonContainerPrefab == null){
             Debug.Log("Prefab is not assigned!");
             return;
         }

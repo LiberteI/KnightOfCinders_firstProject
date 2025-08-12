@@ -29,21 +29,28 @@ public class HitBoxManager : MonoBehaviour
     
 
     private void OnTriggerEnter2D(Collider2D other){
-        
+        // Debug.Log($"Laser trigger entered with {other.name}");
         if(initiator == null){
+            Debug.Log("initiator is null");
             return;
         }
-
+        // if(initiator.GetComponentInParent<EnemyCombatManager>() != null){
+        //     Debug.Log($"initiator: {initiator}, other: {other.name}" );
+        // }
         if(initiator.CompareTag("Enemy") && other.CompareTag("Player")){
             // if the initiator is enemy
-
+            
             // get runtime damage:
             EnemyCombatManager manager = initiator.GetComponentInParent<EnemyCombatManager>();
             
             // pass hit data
+            
             HitData data = new HitData(initiator, manager.damage);
+            if(data == null){
+                Debug.Log("data is null");
+                return;
+            }
             data.targetHurtBox = other.gameObject;
-
             // update knock back direction at runtime
             data.knockBackDir = data.targetHurtBox.transform.position.x - data.initiator.transform.position.x;
             // Debug.Log($"initiator: {data.initiator}, targetHurtBox: {data.targetHurtBox}, damage: {data.damage}, kbdir: {data.knockBackDir}");
@@ -63,10 +70,21 @@ public class HitBoxManager : MonoBehaviour
             // update knock back dir at runtime
             data.knockBackDir = data.targetHurtBox.transform.position.x - data.initiator.transform.position.x;
 
-
+            // Debug.Log($"initiator: {data.initiator}, targetHurtBox: {data.targetHurtBox}, damage: {data.damage}, kbdir: {data.knockBackDir}");
             // raise hit occured takes in hit target
             EventManager.RaiseHitOccured(data);
 
         }
     }
+
+    // setters for intantiating prefabs during runtime.
+    public void SetInitiator(GameObject initiator){
+        this.initiator = initiator;
+    }
+
+
+    public void SetCombatManager(CombatManager cm){
+        playerCombatManager = cm;
+    }
+    
 }

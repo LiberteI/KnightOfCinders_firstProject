@@ -8,7 +8,7 @@ public class EnemyMovementManager : MonoBehaviour
 
     [SerializeField] private Rigidbody2D RB;
     
-    public void FlipTo(Transform target){
+    public virtual void FlipTo(Transform target){
         if(target != null){
             Vector3 newPos = transform.localScale;
             
@@ -23,7 +23,7 @@ public class EnemyMovementManager : MonoBehaviour
         }
     }
 
-    public void WalkTowardsPlayer(){
+    public virtual void WalkTowardsPlayer(){
         if(target == null){
             return;
         }

@@ -16,31 +16,31 @@ public class EWRunState : StateTransitionInterface
     }
     public void OnEnter(){ 
         // in boss's first phase and in attack mode 1 phase 1
-        if(parameter.attackPhase == 2){
+        if(parameter.combatManager.attackPhase == 2){
             parameter.animator.Play("Run");
         }
-        if(parameter.attackPhase == 3){
+        if(parameter.combatManager.attackPhase == 3){
             // coroutine: start running and stutter-teleport from start point
             //            between 2 teleport points
             //            until it appears in front of the player.
             //            before striking, there should be a wind up time for player to react.
             //            then the wizard disappears and show up from the beginning idling
-            manager.StartCoroutine(manager.StutterRunAndAttack());
+            parameter.combatManager.StartCoroutine(parameter.combatManager.StutterRunAndAttack());
         }
         
 
     }
     public void OnUpdate(){
-        if(parameter.attackPhase == 2){
-            manager.FlipTo(parameter.target);
-            manager.RunTowardsPlayer();
-            if(manager.PlayerIsInRange()){
+        if(parameter.combatManager.attackPhase == 2){
+            parameter.movementManager.FlipTo(parameter.target);
+            parameter.movementManager.RunTowardsPlayer();
+            if(parameter.combatManager.PlayerIsInRange()){
                 manager.TransitionState(EvilWizardStateTypes.AttackMode1_1);
                 parameter.RB.linearVelocity = Vector2.zero;
             }
         }
-        if(parameter.attackPhase == 3){
-            if(parameter.isAttacking){
+        if(parameter.combatManager.attackPhase == 3){
+            if(parameter.combatManager.isAttacking){
                 return;
             }
             manager.TransitionState(EvilWizardStateTypes.AttackMode1_2);
@@ -64,31 +64,27 @@ public class EWAttackMode1_1State : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        if(parameter.attackPhase == 2){
+        if(parameter.combatManager.attackPhase == 2){
             parameter.animator.Play("Attack2");
         }
-        else if(parameter.attackPhase == 1){
+        else if(parameter.combatManager.attackPhase == 1){
             // summon some top-down lasers
-            manager.StartCoroutine(manager.SummonALaser());
+            parameter.combatManager.StartCoroutine(parameter.combatManager.SummonALaser());
 
             // cast a spell
-            manager.FlipTo(parameter.target);
+            parameter.movementManager.FlipTo(parameter.target);
             parameter.animator.Play("Attack2");
         }
     }
     public void OnUpdate(){
         info = parameter.animator.GetCurrentAnimatorStateInfo(0);
-        if(parameter.attackPhase == 2){
-            if(info.normalizedTime >= 1f){
-                manager.TransitionState(EvilWizardStateTypes.Vulnerable);
-            }
+        if(info.normalizedTime < 0.99f){
+            return;
         }
-        else{
-            if(parameter.isAttacking){
-                return;
-            }
-            manager.TransitionState(EvilWizardStateTypes.Decide);
+        if(parameter.combatManager.isCasting){
+            return;
         }
+        manager.TransitionState(EvilWizardStateTypes.Decide);
         
         
     }
@@ -109,6 +105,7 @@ public class EWAttackMode1_2State : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        // transitioning from stutter attack
         parameter.animator.Play("Attack1");
     }
     public void OnUpdate(){
@@ -134,11 +131,13 @@ public class EWDeathMode1State : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        manager.StartCoroutine(manager.PlayDeathAndSetOutPhase2());
+        // disable velocity
+        parameter.movementManager.DisableVelocity();
+        parameter.combatManager.StartCoroutine(parameter.combatManager.PlayDeathAndSetOutPhase2());
         
     }
     public void OnUpdate(){
-        
+        parameter.animator.Play("Death");
     }
     public void OnExit(){
         
@@ -197,17 +196,21 @@ public class EWDecideState : StateTransitionInterface{
         }
         if(randomOneOrTwoOrThree == 1){
             // stutter-teleport to player and attack
-            parameter.attackPhase = 3;
+            parameter.combatManager.attackPhase = 3;
             manager.TransitionState(EvilWizardStateTypes.Run);
+            parameter.combatManager.damage = EW1CombatManager.HEAVY_DAMAGE;
         }
         else{ 
-            manager.CalculateDistance();
-            if(parameter.distance >= 15f){ // cast a spell and summon laser
-                parameter.attackPhase = 1;
+            parameter.combatManager.CalculateDistance();
+            if(parameter.combatManager.distance >= 10f){ // cast a spell and summon laser
+                parameter.combatManager.attackPhase = 1;
+                parameter.combatManager.damage = EW1CombatManager.LASER_DAMAGE;
                 manager.TransitionState(EvilWizardStateTypes.AttackMode1_1);
             }
             else{ // when the player is near: run to player and attack
-                parameter.attackPhase = 2;
+                parameter.combatManager.attackPhase = 2;
+
+                parameter.combatManager.damage = EW1CombatManager.LIGHT_DAMAGE;
                 manager.TransitionState(EvilWizardStateTypes.Run);
             }
         }
@@ -228,12 +231,38 @@ public class EWVulnerableState : StateTransitionInterface{
     }
 
     public void OnEnter(){
-        manager.StartCoroutine(manager.Penalty());
+        parameter.combatManager.StartCoroutine(parameter.combatManager.Penalty());
     }
 
     public void OnUpdate(){
         // if coroutine ends:
-        if(parameter.isInPenalty){
+        if(parameter.combatManager.isInPenalty){
+            return;
+        }
+        manager.TransitionState(EvilWizardStateTypes.Decide);
+    }
+
+    public void OnExit(){
+
+    }
+}
+public class EWHurtStatePhase1 : StateTransitionInterface{
+    private EvilWizard manager;
+
+    private EvilWizardParameter parameter;
+
+    public EWHurtStatePhase1(EvilWizard manager){
+        this.manager = manager;
+        this.parameter = manager.parameter;
+    }
+
+    public void OnEnter(){
+        parameter.combatManager.StartCoroutine(parameter.combatManager.ExecuteGetHit());
+    }
+
+    public void OnUpdate(){
+        // if coroutine ends:
+        if(parameter.combatManager.getHit){
             return;
         }
         manager.TransitionState(EvilWizardStateTypes.Decide);
@@ -269,15 +298,15 @@ public class EWWalkState : StateTransitionInterface
         timer = 0;
     }
     public void OnUpdate(){
-        manager.WalkTowardsPlayer();
+        parameter.movementManager.WalkTowardsPlayer();
 
-        manager.FlipTo(parameter.target);
+        parameter.movementManager.FlipTo(parameter.target);
 
         timer += Time.deltaTime;
         if(timer > 1.5f){
             manager.TransitionState(Phase2StatesTypes.AttackWithEffect);
         }
-        if(manager.PlayerIsInRange()){
+        if(parameter.combatManager.PlayerIsInRange()){
             manager.TransitionState(Phase2StatesTypes.AttackWithoutEffect);
         }
     }
@@ -296,10 +325,10 @@ public class EWAttackWithEffectState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        manager.StartCoroutine(manager.TeleportAndAttack());
+        parameter.combatManager.StartCoroutine(parameter.combatManager.TeleportAndAttack());
     }
     public void OnUpdate(){
-        if(parameter.isInCoroutine){
+        if(parameter.combatManager.isInCoroutine){
             return;
         }
         manager.TransitionState(Phase2StatesTypes.Phase2Decide);
@@ -321,6 +350,7 @@ public class EWAttackWithoutEffectState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        parameter.combatManager.damage = EW2CombatManager.LIGHT_DAMAGE;
         parameter.animator.Play("Attack-NoEffect");
         parameter.RB.linearVelocity = Vector2.zero;
         
@@ -359,11 +389,11 @@ public class EWHomingLaserState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        if(parameter.wolfIsAlive){
+        if(parameter.combatManager.wolfIsAlive){
             if(timer >= 4f){
                 timer = 0;
-                manager.StartCoroutine(manager.SummonLasers());
-                parameter.canSummonHomingLaser = true;
+                parameter.combatManager.StartCoroutine(parameter.combatManager.SummonLasers());
+                parameter.combatManager.canSummonHomingLaser = true;
             }
             else{
                 parameter.animator.Play("Idle");
@@ -373,18 +403,18 @@ public class EWHomingLaserState : StateTransitionInterface
         // there is no wolf
         else{
             parameter.RB.linearVelocity = Vector2.zero;
-            manager.StartCoroutine(manager.SummonLasers());
+            parameter.combatManager.StartCoroutine(parameter.combatManager.SummonLasers());
         }
         
         // wolf exists and still in cool down
     }
     public void OnUpdate(){
-        if(parameter.isInCoroutine){
+        if(parameter.combatManager.isInCoroutine){
             return;
         }
 
         // if wolf exists, stay in this state. and there will be seconds of interval between every 2 casts
-        if(parameter.wolfIsAlive){
+        if(parameter.combatManager.wolfIsAlive){
             timer += Time.deltaTime;
             manager.TransitionState(Phase2StatesTypes.HomingLaser);
         }
@@ -408,10 +438,10 @@ public class EWSummonWolfState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        manager.StartCoroutine(manager.SummonAWolf());
+        parameter.combatManager.StartCoroutine(parameter.combatManager.SummonAWolf());
     }
     public void OnUpdate(){
-        if(parameter.isInCoroutine){
+        if(parameter.combatManager.isInCoroutine){
             return;
         }
         manager.TransitionState(Phase2StatesTypes.HomingLaser);
@@ -431,10 +461,10 @@ public class EWLaserWallState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        manager.StartCoroutine(manager.SummonLaserWall());
+        parameter.combatManager.StartCoroutine(parameter.combatManager.SummonLaserWall());
     }
     public void OnUpdate(){
-        if(parameter.isInCoroutine){
+        if(parameter.combatManager.isInCoroutine){
             return;
         }
         manager.TransitionState(Phase2StatesTypes.Phase2Vulnerable);
@@ -454,10 +484,14 @@ public class EWHurtState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        
+        parameter.combatManager.StartCoroutine(parameter.combatManager.ExecuteGetHit());
     }
     public void OnUpdate(){
-
+        // if coroutine ends:
+        if(parameter.combatManager.getHit){
+            return;
+        }
+        manager.TransitionState(Phase2StatesTypes.Phase2Decide);
     }
     public void OnExit(){
         
@@ -502,10 +536,12 @@ public class Phase2DeathState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        
+        // disable velocity
+        parameter.movementManager.DisableVelocity();
+        parameter.animator.Play("Death");
     }
     public void OnUpdate(){
-
+        parameter.animator.Play("Death");
     }
     public void OnExit(){
         
@@ -524,10 +560,10 @@ public class EWStartState : StateTransitionInterface
     }
     public void OnEnter(){
         // Play death without effect in reverse and then idle a bit
-        manager.StartCoroutine(manager.RiseFromDeathAndIdle());
+        parameter.combatManager.StartCoroutine(parameter.combatManager.RiseFromDeathAndIdle());
     }
     public void OnUpdate(){
-        if(parameter.isInCoroutine){
+        if(parameter.combatManager.isInCoroutine){
             return;
         }
         manager.TransitionState(Phase2StatesTypes.Phase2Decide);
@@ -558,7 +594,7 @@ public class EWPhase2DecideState : StateTransitionInterface
     }
     public void OnUpdate(){
         
-        healthStatus = manager.checkBossHeathStatus();
+        healthStatus = parameter.combatManager.checkBossHeathStatus();
         timer += Time.deltaTime;
         if(timer >= 1.5f){
 
@@ -567,10 +603,10 @@ public class EWPhase2DecideState : StateTransitionInterface
                 homing laser is the priority, and should be executed whenever it can be.
                 every time it finishes, start cool down, and during this, hunt the player down
             */
-            if(healthStatus == EvilWizardPhase2Parameter.IS_HEALTH){
+            if(healthStatus == EW2CombatManager.IS_HEALTHY){
                 // 2 phases in HEALTHY state
                 
-                if(parameter.canSummonHomingLaser){
+                if(parameter.combatManager.canSummonHomingLaser){
                     manager.TransitionState(Phase2StatesTypes.HomingLaser);
                 }
                 else{
@@ -582,12 +618,12 @@ public class EWPhase2DecideState : StateTransitionInterface
                 when in IS WOUNDED state:
                 the wizard will keep summmon lasers if wolf exists, otherwise, the behaviour keeps the same with that in healthy state
             */
-            else if(healthStatus == EvilWizardPhase2Parameter.IS_WOUNDED){
-                if(parameter.canSummonWolf){
+            else if(healthStatus == EW2CombatManager.IS_WOUNDED){
+                if(parameter.combatManager.canSummonWolf){
                     manager.TransitionState(Phase2StatesTypes.SummonWolf);
                 }
                 else{
-                    if(parameter.canSummonHomingLaser){
+                    if(parameter.combatManager.canSummonHomingLaser){
                         manager.TransitionState(Phase2StatesTypes.HomingLaser);
                     }
                     else{
@@ -598,12 +634,12 @@ public class EWPhase2DecideState : StateTransitionInterface
             /*
                 when in UNHEALTHY state
             */
-            else{
-                if(parameter.canSummonLaserWall){
+            else if(healthStatus == EW2CombatManager.IS_UNHEALTHY){
+                if(parameter.combatManager.canSummonLaserWall){
                     manager.TransitionState(Phase2StatesTypes.LaserWall);
                 }
                 else{
-                    if(parameter.canSummonHomingLaser){
+                    if(parameter.combatManager.canSummonHomingLaser){
                         manager.TransitionState(Phase2StatesTypes.HomingLaser);
                     }
                     else{

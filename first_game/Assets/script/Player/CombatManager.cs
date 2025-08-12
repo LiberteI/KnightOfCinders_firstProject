@@ -91,6 +91,8 @@ public class CombatManager : MonoBehaviour
 
     public float damage;
 
+    public float damageMultiplier = 1f;
+
     public float knockBackForce;
 
     [Header("AttackStepFlag")]
@@ -112,6 +114,10 @@ public class CombatManager : MonoBehaviour
     void OnDisable(){
         EventManager.OnHitOccured -= GetHit;
         EventManager.OnKnightDied -= Die;
+    }
+
+    public void MultiplyCurDamage(){
+        damage *= damageMultiplier;
     }
 
     public bool IsAttacking(){
@@ -371,8 +377,6 @@ public class CombatManager : MonoBehaviour
         // Debug.Log($"knight hurtbox: {knight.parameter.knightHurtBox}");
         if(knight.parameter.knightHurtBox == data.targetHurtBox){
             
-            
-            
             // phase 2
             if(isDefending){
                 // if damage is not from back
@@ -383,7 +387,7 @@ public class CombatManager : MonoBehaviour
 
                         // get knock back a little.
                         // Debug.Log(data.knockBackDir);
-                        GetKnockedBack(data.knockBackDir, 0.5f);
+                        GetKnockedBack(data.knockBackDir, 5f);
                         // take 0 damage
                         
                         return;
@@ -412,6 +416,8 @@ public class CombatManager : MonoBehaviour
 
             // phase 1
             knight.TransitionState(KnightStateTypes.Hurt);
+
+            
             // pass incoming hit data
             // execute OnGetHit method in states that concern
             knight.currentState.OnGetHit(data);
@@ -419,6 +425,7 @@ public class CombatManager : MonoBehaviour
         
     }
     public IEnumerator ExecuteGetHit(HitData data){
+        GameObject curInitiator = data.initiator;
         // set flag
         getHit = true;
 
@@ -428,8 +435,28 @@ public class CombatManager : MonoBehaviour
         // play animation
         knight.parameter.animator.Play("hurt");
 
+        // if get crashed by a charging wolf:
+        var dwCombat = data.initiator.GetComponentInParent<DWCombatManager>();
+        if(dwCombat != null && dwCombat.isCharging){
+            // use committed knock back direction
+            // Debug.Log(dwCombat.knockBackDir);
+            int curFacing = 0;
+            if(transform.localScale.x > 0){
+                curFacing = 1;
+            }
+            else{
+                curFacing = -1;
+            }
+            if(curFacing != dwCombat.knockBackDir){
+                data.knockBackDir = -1;
+            }
+            else{
+                data.knockBackDir = 1;
+            }
+            GetKnockedBack(data.knockBackDir, data.damage);
+        }
         // make sure to finish animation and disable speed.
-        yield return AnimationFinishes("hurt", 0);
+        yield return AnimationFinishes("hurt", knight.parameter.RB.linearVelocity.x);
 
         
 
@@ -447,16 +474,17 @@ public class CombatManager : MonoBehaviour
 
     
     
-    private void GetKnockedBack(float incomingDir, float damage){
-        // scale force by damage:
+    public void GetKnockedBack(float incomingDir, float damage){
+
         float dir = 0;
+        // dir is related to x-axis
         if(incomingDir > 0){
             dir = 1;
         }
         else if(incomingDir < 0){
             dir = -1;
         }
-        float force = damage * 10f; 
+        float force = damage; 
         knight.parameter.RB.AddForce(new Vector2(force * dir, 0), ForceMode2D.Impulse);
     }
     
