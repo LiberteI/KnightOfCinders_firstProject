@@ -15,14 +15,21 @@ public class TrapDetector : MonoBehaviour
 
     [SerializeField] LayerMask playerLayer;
 
+    [SerializeField] private GamePlayCoordinator gpCoordinator;
+
     private bool hasInvoked = false;
+
+    private bool hasCleared;
+
 
     void Start(){
         StartCoroutine(SetSkeletonDead());
+        skeleton.parameter.healthManager.maxHealth = 150f;
     }
 
     void Update(){
         InvokeSkeletonIfPlayerInRange();
+        CheckHasCleared();
     }
 
 
@@ -72,5 +79,15 @@ public class TrapDetector : MonoBehaviour
 
         skeleton.TransitionState(NSStateType.Idle);
         healthBar.SetActive(true);
+    }
+
+    private void CheckHasCleared(){
+        if(hasCleared){
+            return;
+        }
+        if(skeleton.parameter.healthManager.isDead){
+            hasCleared = true;
+            EventManager.RaiseExitBossFight(gpCoordinator.curArena);
+        }
     }
 }

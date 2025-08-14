@@ -87,6 +87,9 @@ public class EW2CombatManager : EnemyCombatManager
 
     public Knight knight;
 
+    [SerializeField] private GamePlayCoordinator gpCoordinator;
+
+    private bool hasCleared;
     void Start(){
         healthThresholdPhase1 = 0.66f * evilWizard.parameter.healthManager.maxHealth;
 
@@ -98,6 +101,7 @@ public class EW2CombatManager : EnemyCombatManager
         CheckWolfDeathTime();
         UpdateCurInvulnerableTimer();
         ChangeTransparencyIfInvincible();
+        CheckHasCleared();
     }
     void OnEnable(){
         // Debug.Log($"{name} subscribing to OnEnemyDied");
@@ -787,4 +791,13 @@ public class EW2CombatManager : EnemyCombatManager
         isInCoroutine = false;
     }
 
+    private void CheckHasCleared(){
+        if(hasCleared){
+            return;
+        }
+        if(evilWizard.parameter.healthManager.isDead){
+            hasCleared = true;
+            EventManager.RaiseExitBossFight(gpCoordinator.curArena);
+        }
+    }
 }

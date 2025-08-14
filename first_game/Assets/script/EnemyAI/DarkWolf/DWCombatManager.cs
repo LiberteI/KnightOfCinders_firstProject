@@ -37,6 +37,11 @@ public class DWCombatManager : EnemyCombatManager
     private HitData data;
 
     public bool isVulnerable;
+
+    [SerializeField] private GamePlayCoordinator gpCoordinator;
+
+    private bool hasCleared;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -48,6 +53,7 @@ public class DWCombatManager : EnemyCombatManager
     {
         CheckWolfHealthStatus();
         UpdateCurInvulnerableTimer();
+        CheckHasCleared();
     }
     private void UpdateCurInvulnerableTimer(){
         if(curInvulnerableTimer >= 0){
@@ -291,5 +297,20 @@ public class DWCombatManager : EnemyCombatManager
             return true;
         }
         return false;
+    }
+
+    public void CheckHasCleared(){
+
+        // if cur dark wolf's max health is less than 1000, then it is a summoned wolf;
+        // do not call this method if so
+        if(hasCleared){
+            return;
+        }
+        if(darkWolf.parameter.healthManager.maxHealth < 1000f){
+            return;
+        }
+        if(darkWolf.parameter.healthManager.isDead){
+            EventManager.RaiseExitBossFight(gpCoordinator.curArena);
+        }
     }
 }

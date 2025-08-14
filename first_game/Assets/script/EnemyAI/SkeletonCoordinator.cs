@@ -88,6 +88,10 @@ public class SkeletonCoordinator : MonoBehaviour
 
     [SerializeField] float curAgroSwitchTimer;
     
+    [SerializeField] private GamePlayCoordinator gpCoordinator;
+
+    private bool hasCleared;
+
     private void SpawnSkeletons(int skeletonCount){
         for(int i = 0; i < skeletonCount; i++){
             // randomly assign skeletons' spawn points
@@ -120,8 +124,9 @@ public class SkeletonCoordinator : MonoBehaviour
             skeletons[i].knight = this.knight;
             skeletons[i].newSkeleton.parameter.target = knightTransform;
             skeletons[i].newSkeleton.parameter.movementManager.target = knightTransform;
-
+            
             // set active
+            healthBarInstance.SetActive(true);
             containerInstance.SetActive(true);
         }
     }
@@ -143,6 +148,7 @@ public class SkeletonCoordinator : MonoBehaviour
     void Update(){
         UpdateAgroSwitchTimer();
         CheckEveryTwoSeconds();
+        CheckHasCleared();
     }
     private void AssignRole(){
         // since skeletons' positions are random by default, it is easier to assign roles manually.
@@ -157,7 +163,8 @@ public class SkeletonCoordinator : MonoBehaviour
 
         skeletons[2].currentRole = SkeletonRole.Flanker;
         curFlanker = skeletons[2];
-
+        // activate their health bars
+        
         // set health and speed here.
         // 1.8 time of normal speed but only 0.2 time of normal health
         curFlanker.newSkeleton.parameter.movementManager.walkSpeed = 1.5f * curFlanker.newSkeleton.parameter.movementManager.walkSpeed;
@@ -197,7 +204,7 @@ public class SkeletonCoordinator : MonoBehaviour
                     if(skeletons[i].newSkeleton.parameter.nsCombatManager.currentRole == SkeletonRole.Backuper){
                         skeletons[i].newSkeleton.parameter.nsCombatManager.currentRole = SkeletonRole.Frontliner;
                         // update current frontliner
-                        Debug.Log("1 is replaced");
+                        // Debug.Log("1 is replaced");
                         curFrontliner1 = skeletons[i];
                         break;
                     }
@@ -221,7 +228,7 @@ public class SkeletonCoordinator : MonoBehaviour
             }
         }
         if(curFlanker.newSkeleton.parameter.healthManager.isDead){
-            Debug.Log("Flank is dead");
+            // Debug.Log("Flank is dead");
             // loop through squat and find the first non dead back-uper
             for(int i = 0; i < skeletonCount; i ++){
                 Debug.Log($"i: {i}");
@@ -256,5 +263,22 @@ public class SkeletonCoordinator : MonoBehaviour
         TrackCurSkeletonSquat();
     }
 
+    private void CheckHasCleared(){
+        if(hasCleared){
+            return;
+        }
+        if(AllDefeated()){
+            hasCleared = true;
+            EventManager.RaiseExitBossFight(gpCoordinator.curArena);
+        }
+    }
 
+    private bool AllDefeated(){
+        for(int i = 0; i < skeletonCount; i ++){
+            if(!skeletons[i].newSkeleton.parameter.healthManager.isDead){
+                return false;
+            }
+        }
+        return true;
+    }
 }

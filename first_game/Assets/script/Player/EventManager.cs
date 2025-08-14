@@ -15,6 +15,10 @@ public static class EventManager{
     
     public static event Action <GameObject> OnEnemyDied;
 
+    public static event Action<ArenaSetUp> OnEnterBossFight;
+
+    public static event Action<ArenaSetUp> OnExitBossFight;
+
     public static void KnightHealthChanged(GameObject knight, float curHealth, float maxHealth){
         if(OnKnightHealthChanged != null){
             OnKnightHealthChanged(knight, curHealth, maxHealth);
@@ -54,6 +58,18 @@ public static class EventManager{
         // Debug.Log($"OnEnemyDied invoked for: {enemy.name}");
         if(OnEnemyDied != null){
             OnEnemyDied(enemy);
+        }
+    }
+
+    public static void RaiseEnterBossFight(ArenaSetUp curSetUp){
+        if(OnEnterBossFight != null){
+            OnEnterBossFight(curSetUp);
+        }
+    }
+
+    public static void RaiseExitBossFight(ArenaSetUp curSetUp){
+        if(OnExitBossFight != null){
+            OnExitBossFight(curSetUp);
         }
     }
 }
