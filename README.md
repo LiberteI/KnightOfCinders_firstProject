@@ -54,4 +54,4 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 - Indie Game Developer & Software Engineer  
 - Pianist | BSc Computer Science + Music Minor
 - Passionate about creating smart, playable, and meaningful game experiences.
-- [LinkedIn Profile](www.linkedin.com/in/yiming-yang-89a0102a0)
+- [LinkedIn Profile](https://www.linkedin.com/in/yiming-yang-89a0102a0/?trk=public-profile-join-page)
