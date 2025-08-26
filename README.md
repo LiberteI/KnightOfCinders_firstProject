@@ -9,7 +9,7 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 - For a detailed breakdown of bosses, abilities, and design features, see [Full Feature List](docs/FEATURES.md).
 
 - Versatile player with dynamic movements and combat options
-- - For a detailed breakdown of player design features, see [Full Feature List](PLAYER_FEATURE.md).
+- For a detailed breakdown of player design features, see [Player feature](PLAYER_FEATURE.md).
 - Finite State Machine AI for dynamic enemy behavior
 - Polished melee combat system, providing a fun yet challenging experience
 - Polished combat feedback system (hit effects, synchronized sound effects)
