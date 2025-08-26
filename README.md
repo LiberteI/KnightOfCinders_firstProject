@@ -16,6 +16,7 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 - Polished weather system (particle system with detailed effects)
 - Beautiful storytelling animations with dynamic ambience.
 - Smooth camera system
+- Interactive polished UI system
 
 ## 🎥 Trailer
 [![Watch the trailer](https://img.youtube.com/vi/<VIDEO_ID>/0.jpg)](https://www.youtube.com/watch?v=<VIDEO_ID>)
