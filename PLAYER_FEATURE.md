@@ -81,3 +81,34 @@
 5. **Idle / Run / Jump / Jump Attack**  
    - If hit → interrupted, full damage, Hurt state  
 ---
+# 💨 Stamina System
+
+## 🔋 Stamina Costs
+- **Light Attack** → 3–5% per use  
+- **Heavy Attack** → 5–8% per use  
+- **Run** → 3–5% per use  
+- **Blocked Attack** → 10% per occurrence  
+- **Roll (Dodge)** → 15% per use  
+- **Shield Strike** → 5% per use  
+
+---
+
+## ⚙️ Stamina Protocols
+1. **Global Stamina Bar**  
+   - All stamina-related actions are tied to a single global bar.  
+
+2. **Regeneration**  
+   - Stamina regenerates continuously every frame.  
+
+3. **Consumption**  
+   - Running, heavy attacks, blocking while under attack, and Shield Strike reduce stamina.  
+
+4. **Depletion Penalty**  
+   - If stamina drops below 0, it is reset to 0.  
+   - Regeneration resumes only after a **1-second delay** (punishment for overuse).  
+
+5. **Clamping**  
+   - Stamina values are always capped between **0 and Max**.  
+
+6. **Insufficient Stamina Handling**  
+   - If stamina is too low to perform an action, the system **gracefully cancels or prevents the move**.  
