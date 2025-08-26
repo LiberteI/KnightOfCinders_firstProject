@@ -103,3 +103,53 @@ It has **two phases** based on its health threshold, evolving from calculated st
   - Phase 2 tests stamina & defensive discipline with heavier knockback.  
 - **Purpose**: Acts as an **early-game boss**, teaching players how enemies can escalate in intensity.  
 
+
+## 🧙 Evil Wizard – Final Boss
+
+The **Evil Wizard** is the climactic battle, fought across two major phases with escalating complexity.  
+
+---
+
+### Phase 1 – Teaching Phase
+- **Abilities:**  
+  - Run / Idle  
+  - Upward and downward melee strikes  
+  - Top-down laser if player is far  
+  - **Stutter Teleport Finisher** → multiple teleports, then a heavy strike for 30%+ damage and knockback  
+- **Design Purpose:**  
+  - Trains players to dodge, find safe attack windows, and recognize telegraphs.  
+  - Hints at future laser danger without overwhelming.  
+- **Transition:**  
+  - After death, Wizard collapses (DeathMode1).  
+  - A soul-like aura rises, signaling rebirth into Phase 2.  
+
+---
+
+### Phase 2 – Power Spike (Bringer of Death)
+
+#### 🟢 Stage 1 (HP > 70%)
+- **Melee Sickle Attacks** → fast attack with high pressure. Enchanted if cannot reach the player within time.
+- **Homing Lasers** → magical bolts that track player’s movement.  
+
+#### 🟡 Stage 2 (HP 40–70%)
+- **Summon Dark Wolf** → brings one Dark Wolf (Mode 2 form) into the arena.  
+- **Partial Invincibility** → Wizard becomes 20% transparent and cannot be damaged.
+- **Nerfed Homing Lasers** → magical bolts that track player’s movement.
+
+#### 🔴 Stage 3 (HP < 40%)
+- **Laser Wall Barrage** → sweeping walls of lasers fill the arena.  
+  - Always preceded by a telegraphing animation for fairness.  
+  - After casting, Wizard enters a **vulnerable state** where incoming damage is doubled.  
+- **Summons** may continue if wolf is not active.  
+
+**Design Purpose:**  
+- Escalates from single-target pressure (Stage 1) → multi-enemy tension (Stage 2) → spectacle survival (Stage 3).  
+- Vulnerability windows reward patience and punish reckless play.  
+- Final test of the player’s mastery of dodging, stamina, and positioning.  
+
+---
+
+# 🎯 Boss Design Philosophy
+- **Dark Wolf** → Introduces dodging, spacing, and escalation mechanics.  
+- **Skeleton Army** → Tests crowd control, stamina management, and awareness of enemy roles.  
+- **Evil Wizard** → Culmination of all skills, teaching → escalating → mastery test.  
