@@ -5,16 +5,23 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 
 ## ✨ Features
 - 4 unique bosses (Dark Wolf, Skeleton Army, Evil Wizard Phase 1, Evil Wizard Phase 2)
+  
+- For a detailed breakdown of bosses, abilities, and design features, see [Full Feature List](docs/FEATURES.md).
+
 - Versatile player with dynamic movements and combat options
 - Finite State Machine AI for dynamic enemy behavior
-- Polished meele combat system, providing fun yet fun playing experience
-- Polished combat feedback system(hit effects, synchronised sound effects)
+- Polished melee combat system, providing a fun yet challenging experience
+- Polished combat feedback system (hit effects, synchronized sound effects)
 - Parallax backgrounds & atmospheric and beautiful level design
-- Polished weather system.(particle system with detailed effects)
-- Beautiful animation in story telling with dynamic ambience.
-  
+- Polished weather system (particle system with detailed effects)
+- Beautiful storytelling animations with dynamic ambience.
+- Smooth camera system
+
+## 🎥 Trailer
+[![Watch the trailer](https://img.youtube.com/vi/<VIDEO_ID>/0.jpg)](https://www.youtube.com/watch?v=<VIDEO_ID>)
+
 ## ▶️ Demo
-- [Download the latest build (Google Drive)](https://drive.google.com/drive/my-drive)  
+- [Download the latest build (Google Drive)](https://drive.google.com/file/d/1hqf1JtwtrV-ngLj06k_RqCCNM3AOiRq6/view?usp=drive_link)
 - Controls:  
   - **WASD** → Move  
   - **J** → Light Attack  
@@ -26,16 +33,23 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
   - **Esc** → Quit
 
 ## 📷 Screenshots
-*(Add 2–3 gameplay images or GIFs here)*
+![Boss fight](screenshots/bossfight.png)
+![Combat system](screenshots/combat.gif)
+
 
 ## ⚙️ Tech Stack
-- Unity (C#)
-- 2D Animation & State Machines
-- Pixel-art assets
-- Audio design with Unity’s Audio Manager
+- Unity (C#) for core gameplay systems and mechanics
+- Unity Particle System for dynamic weather and visual effects
+- 2D Animation & sprite-based design
+- Extendable Finite State Machines for enemy AI and player state management
+- Pixel-art asset integration and level design
+- Audio design and feedback using Unity’s Audio Manager
+- Clean, maintainable code following SOLID principles and object-oriented design
+
 
 ## 👤 Author
 **Yiming Yang**  
 - Indie Game Developer & Software Engineer  
-- Pianist | BSc Computer Science + Music Minor  
+- Pianist | BSc Computer Science + Music Minor
+- Passionate about creating smart, playable, and meaningful game experiences.
 - [LinkedIn Profile](www.linkedin.com/in/yiming-yang-89a0102a0)
