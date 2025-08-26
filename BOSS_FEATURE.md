@@ -69,4 +69,37 @@ Skeletons cooperate using different **combat roles** (frontliner, flanker, back-
 ## 🎯 Design Goals
 - Create **tactical variety** within a single fight.  
 - Force players to manage both **constant melee pressure** (frontliners) and **opportunistic strikes** (flanker).  
-- Add tension with **role substitution**, making the battle feel alive and reactive.  
+- Add tension with **role substitution**, making the battle feel alive and reactive.
+
+# 🐺 Dark Wolf Boss
+
+## Overview
+The **Dark Wolf** is a small but aggressive boss that introduces players to reactive combat.  
+It has **two phases** based on its health threshold, evolving from calculated strikes to a berserk frenzy.  
+
+---
+
+## Phase 1 (Healthy)
+- **Transparent Strike**  
+  - Wolf briefly turns transparent and lunges at the player.  
+  - If the player is too far, the wolf will **teleport** close before attacking.  
+- **Charge Attack**  
+  - Wolf charges straight toward the player with high speed.  
+
+---
+
+## Phase 2 (Berserk – HP < 50%)
+- **Charge Attack** *(same as Phase 1)*  
+- **Body Slam**  
+  - Wolf performs a violent charge, slamming its body into the player.  
+  - Higher knockback and damage than Phase 1 attacks.  
+
+---
+
+## Design Notes
+- **Phase Transition**: At 50% HP, the wolf becomes visibly more aggressive.  
+- **Player Learning Curve**:  
+  - Phase 1 teaches dodging & spacing (teleports, charges).  
+  - Phase 2 tests stamina & defensive discipline with heavier knockback.  
+- **Purpose**: Acts as an **early-game boss**, teaching players how enemies can escalate in intensity.  
+
