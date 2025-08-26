@@ -166,9 +166,11 @@ public class SkeletonCoordinator : MonoBehaviour
         // activate their health bars
         
         // set health and speed here.
-        // 1.8 time of normal speed but only 0.2 time of normal health
+        // 1.8 time of normal speed but only 0.4 time of normal health
+        // 2 times of normal damage
         curFlanker.newSkeleton.parameter.movementManager.walkSpeed = 1.5f * curFlanker.newSkeleton.parameter.movementManager.walkSpeed;
-        curFlanker.newSkeleton.parameter.healthManager.maxHealth = 0.2f * curFlanker.newSkeleton.parameter.healthManager.maxHealth;
+        curFlanker.newSkeleton.parameter.healthManager.maxHealth = 0.4f * curFlanker.newSkeleton.parameter.healthManager.maxHealth;
+        curFlanker.newSkeleton.parameter.combatManager.damage = 2f * curFlanker.newSkeleton.parameter.combatManager.damage;
     }
 
     private IEnumerator StartAttacking(){
@@ -220,7 +222,7 @@ public class SkeletonCoordinator : MonoBehaviour
                         skeletons[i].newSkeleton.parameter.nsCombatManager.currentRole = SkeletonRole.Frontliner;
 
                         // update current frontliner
-                        Debug.Log("2 is replaced");
+                        // Debug.Log("2 is replaced");
                         curFrontliner2 = skeletons[i];
                         break;
                     }
@@ -231,19 +233,20 @@ public class SkeletonCoordinator : MonoBehaviour
             // Debug.Log("Flank is dead");
             // loop through squat and find the first non dead back-uper
             for(int i = 0; i < skeletonCount; i ++){
-                Debug.Log($"i: {i}");
+                // Debug.Log($"i: {i}");
                 if(!skeletons[i].newSkeleton.parameter.healthManager.isDead){
-                    Debug.Log("found a not dead skeleton");
+                    // Debug.Log("found a not dead skeleton");
                     if(skeletons[i].newSkeleton.parameter.nsCombatManager.currentRole == SkeletonRole.Backuper){
                         skeletons[i].newSkeleton.parameter.nsCombatManager.currentRole = SkeletonRole.Flanker;
 
                         // update current frontliner
                         curFlanker = skeletons[i];
-                        Debug.Log("flanker is replaced");
+                        // Debug.Log("flanker is replaced");
                         // set health and speed here.
-                        // 1.8 time of normal speed but only 0.2 time of normal health
+                        // 1.8 time of normal speed but only 0.4 time of normal health
                         curFlanker.newSkeleton.parameter.movementManager.walkSpeed = 1.5f * curFlanker.newSkeleton.parameter.movementManager.walkSpeed;
-                        curFlanker.newSkeleton.parameter.healthManager.maxHealth = 0.2f * curFlanker.newSkeleton.parameter.healthManager.maxHealth;
+                        curFlanker.newSkeleton.parameter.healthManager.maxHealth = 0.4f * curFlanker.newSkeleton.parameter.healthManager.maxHealth;
+                        
                         break;
                     }
                 }

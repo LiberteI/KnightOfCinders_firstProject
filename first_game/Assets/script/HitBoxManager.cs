@@ -13,13 +13,34 @@ public class HitData{
 
     public float knockBackDir;
 
+    public FeedbackData feedbackData;
+
     public HitData(GameObject initiator, float damage){
         // pass 2 params
         this.initiator = initiator;
 
         this.damage = damage;
+
+        // instantiate feedbackData
+        this.feedbackData = new FeedbackData();
     }
 }
+[Serializable]
+public class FeedbackData{
+    [Header("Hit Stop")]
+    public float stopTime;
+
+    [Header("Camera Shake")]
+    public float amplitude;
+
+    public float frequency;
+
+    public float duration;
+
+    
+
+}
+
 public class HitBoxManager : MonoBehaviour
 {
     [Header("Attack Initiator")]
@@ -54,7 +75,15 @@ public class HitBoxManager : MonoBehaviour
             data.targetHurtBox = other.gameObject;
             // update knock back direction at runtime
             data.knockBackDir = data.targetHurtBox.transform.position.x - data.initiator.transform.position.x;
+
+            // assign customised feedback
+            AssignFeedbackData(manager.sourceFeedback, data.feedbackData);
             // Debug.Log($"initiator: {data.initiator}, targetHurtBox: {data.targetHurtBox}, damage: {data.damage}, kbdir: {data.knockBackDir}");
+            
+            // check should anounce first
+            if(!PlayerHitShouldOccur()){
+                return;
+            }
             // raise announcement
             EventManager.RaiseHitOccured(data);
             
@@ -65,12 +94,17 @@ public class HitBoxManager : MonoBehaviour
             // get runtime damage:
             HitData data = new HitData(initiator, playerCombatManager.damage);
 
+
             // pass hit data
             data.targetHurtBox = other.gameObject;
 
             // update knock back dir at runtime
             data.knockBackDir = data.targetHurtBox.transform.position.x - data.initiator.transform.position.x;
 
+            // assign player customised feedback data
+            AssignFeedbackData(playerCombatManager.sourceFeedback, data.feedbackData);
+
+            
             // Debug.Log($"initiator: {data.initiator}, targetHurtBox: {data.targetHurtBox}, damage: {data.damage}, kbdir: {data.knockBackDir}");
             // raise hit occured takes in hit target
             EventManager.RaiseHitOccured(data);
@@ -87,5 +121,35 @@ public class HitBoxManager : MonoBehaviour
     public void SetCombatManager(CombatManager cm){
         playerCombatManager = cm;
     }
+    
+    public void AssignFeedbackData(FeedbackData source, FeedbackData target){
+        // assign data manually
+
+        // hit stop
+        target.stopTime = source.stopTime;
+
+        // camera shake
+        target.duration = source.duration;
+
+        target.amplitude = source.amplitude;
+
+        target.frequency = source.frequency;
+        
+    }
+
+    private bool PlayerHitShouldOccur(){
+        // define in what circustances hit should not occur;
+        
+        // if player is invincible
+        if(playerCombatManager.IsInvincible()){
+            return false;
+        }
+        // if player has died
+        if(playerCombatManager.knight.parameter.healthManager.isDead){
+            return false;
+        }
+        return true;
+    }
+
     
 }

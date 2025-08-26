@@ -13,14 +13,14 @@ public static class StaminaCostTable{
     */
 
     public static readonly Dictionary<StaminaCostTypes, float> costs = new() {
-        {StaminaCostTypes.LightAttack, 5f},
+        {StaminaCostTypes.LightAttack, 0f},
         {StaminaCostTypes.HeavyAttack, 8f},
         {StaminaCostTypes.Run, 0.5f}, 
-        {StaminaCostTypes.BlockedAttack, 30f},
-        {StaminaCostTypes.Roll, 10f},
+        {StaminaCostTypes.BlockedAttack, 10f},
+        {StaminaCostTypes.Roll, 15f},
         {StaminaCostTypes.ShieldStrike, 5f},
         {StaminaCostTypes.RunAttack, 8f},
-        {StaminaCostTypes.JumpAttack, 6f},
+        {StaminaCostTypes.JumpAttack, 15f},
     };
 }
 // define what behaviour would cost stamina.

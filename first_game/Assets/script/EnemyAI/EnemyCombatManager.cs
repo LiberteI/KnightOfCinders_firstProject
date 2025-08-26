@@ -11,12 +11,18 @@ public class EnemyCombatManager : MonoBehaviour
     public bool isAttacking;
 
     public float damage;
-    
+
+    public FeedbackData sourceFeedback;
+
     void Start(){
         
     }
     public virtual void GetHit(HitData data){
         
+    }
+
+    public virtual void SetFeedback(){
+
     }
 
     public bool PlayerIsInRange(){
@@ -42,5 +48,7 @@ public class EnemyCombatManager : MonoBehaviour
 
     private void OnDrawGizmos(){
         Gizmos.DrawWireSphere(attackCircleCentre.position, attackCircleRadius);
-    }
+    }   
+
+
 }

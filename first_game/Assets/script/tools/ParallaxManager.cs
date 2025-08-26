@@ -5,28 +5,39 @@ using System;
 
 public class ParallaxManager : MonoBehaviour
 {   
-    [SerializeField]
-    public float lastPos;
+    public float graphStartPos;
 
-    [SerializeField]
+    public float graphDeltaPos;
+
     public float parallaxSpeed;
 
     [SerializeField]
     private GameObject camera;
     
+    public float cameraDeltaPos;
+
+    private float camStartPos;
 
     void Start(){
-        lastPos = transform.position.x;
+        graphStartPos = transform.position.x;
+
+        camStartPos = camera.transform.position.x;
     }
     
-    void Update(){
+    void FixedUpdate(){
         // decide how much the bgImage would move related to the camera
         // speed = 1: stay put related to camera. Looks infinitely far to player
         // speed = 0: move fast related to camera. Looks infinitely near from player
         // speed = 0.5 move at half speed. Looks mid-far.
-        float relativeDistance = camera.transform.position.x * parallaxSpeed;
+        cameraDeltaPos = camera.transform.position.x - camStartPos;
 
-        transform.position = new Vector3(lastPos + relativeDistance, transform.position.y, transform.position.z);
+        graphDeltaPos = transform.position.x - graphStartPos;
+        
+        float relativeDistance = cameraDeltaPos * parallaxSpeed;
+
+        Vector3 newPos = new Vector3(graphStartPos + relativeDistance, transform.position.y, transform.position.z);
+
+        transform.position = newPos;
     }
 
 }

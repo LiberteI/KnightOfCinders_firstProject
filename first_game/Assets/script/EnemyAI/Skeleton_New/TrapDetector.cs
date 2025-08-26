@@ -24,7 +24,6 @@ public class TrapDetector : MonoBehaviour
 
     void Start(){
         StartCoroutine(SetSkeletonDead());
-        skeleton.parameter.healthManager.maxHealth = 150f;
     }
 
     void Update(){

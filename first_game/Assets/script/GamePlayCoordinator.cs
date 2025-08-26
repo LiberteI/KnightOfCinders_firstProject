@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 using Unity.Cinemachine;
-
+using UnityEngine.SceneManagement;
 [Serializable]
 public class ArenaSetUp{
     public GameObject currentLeftBarrier;
@@ -76,14 +76,59 @@ public class GamePlayCoordinator : MonoBehaviour
 
     private bool wizardTriggered;
 
+    public bool isInBossFight;
+
+    public string currentScene = "outside";
+
+    [SerializeField] private Transform sceneCheckCentre;
+
+    [SerializeField] private float sceneCheckRadius;
+
+    [SerializeField] private LayerMask outside;
+
+    [SerializeField] private LayerMask finalRoom;
+
+    [SerializeField] private LayerMask sewer;
+
+    [SerializeField] private LayerMask dungeon;
+
+    [SerializeField] private LayerMask rainScene;
+
+    [SerializeField] private GameObject rain;
+
+    [SerializeField] private GameObject bound;
+
+    [SerializeField] private AmbienceManager ambienceManager;
+
+    
+
     void OnEnable(){
+        EventManager.OnEnterBossFight += IsInBossFight;
+
         EventManager.OnExitBossFight += CleanUpArena;
+
+        EventManager.OnExitBossFight += HasExitedBossFight;
     }
     void OnDisable(){
+        EventManager.OnEnterBossFight -= IsInBossFight;
+
         EventManager.OnExitBossFight -= CleanUpArena;
+
+        EventManager.OnExitBossFight -= HasExitedBossFight;
     }
     void Start(){
         exploringCamera1.Priority = 10;
+    }
+    void Update(){
+        DetermineScene();
+
+        CheckQuit();
+    }
+
+    private void CheckQuit(){
+        if(Input.GetKeyDown(KeyCode.Escape)){
+            SceneManager.LoadScene("MainMenu");
+        }
     }
     private void OnTriggerStay2D(Collider2D other){
         if(other.CompareTag("SewerRange")){
@@ -180,4 +225,46 @@ public class GamePlayCoordinator : MonoBehaviour
         currentArena.currentCamera.Priority = 0;
     }
 
+
+    public void IsInBossFight(ArenaSetUp currentArena){
+        isInBossFight = true;
+    }
+
+    public void HasExitedBossFight(ArenaSetUp currentArena){
+        isInBossFight = false;
+    }
+
+    public void DetermineScene(){
+        string curScene = "";
+        // Debug.Log(curScene);
+        if(Physics2D.OverlapCircle(sceneCheckCentre.position, sceneCheckRadius, dungeon)){
+            curScene = "dungeon";
+        }
+        else if(Physics2D.OverlapCircle(sceneCheckCentre.position, sceneCheckRadius, finalRoom)){
+            curScene = "finalRoom";
+        }
+        else if(Physics2D.OverlapCircle(sceneCheckCentre.position, sceneCheckRadius, sewer)){
+            curScene = "sewer";
+        }
+        
+        else if(Physics2D.OverlapCircle(sceneCheckCentre.position, sceneCheckRadius, outside)){
+            curScene = "outside";
+        }
+        else if(Physics2D.OverlapCircle(sceneCheckCentre.position, sceneCheckRadius, rainScene)){
+            curScene = "rainScene";
+            rain.SetActive(true);
+            bound.SetActive(true);
+        }
+        // Debug.Log(curScene);
+        if(curScene != "" && curScene != currentScene){
+            EventManager.RaiseSceneChanged(curScene);
+            currentScene = curScene;
+        }
+    }
+
+    private void OnDrawGizmosSelected(){
+        Gizmos.color = Color.yellow;
+
+        Gizmos.DrawWireSphere(sceneCheckCentre.position, sceneCheckRadius);
+    }
 }

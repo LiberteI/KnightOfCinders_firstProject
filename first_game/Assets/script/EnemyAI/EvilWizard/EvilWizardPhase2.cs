@@ -42,6 +42,8 @@ public class EvilWizardPhase2Parameter{
     [Header("Brain")]
 
     public Knight knight;
+
+    public WizardPhase2SoundManager soundManager;
 }
 
 public class EvilWizardPhase2 : MonoBehaviour
@@ -76,7 +78,7 @@ public class EvilWizardPhase2 : MonoBehaviour
     }
 
     public void TransitionState(Phase2StatesTypes type){
-        Debug.Log($"[EW] Transitioning {currentState} to {type}");
+        // Debug.Log($"[EW] Transitioning {currentState} to {type}");
         if(currentState != null){
             currentState.OnExit();
         }

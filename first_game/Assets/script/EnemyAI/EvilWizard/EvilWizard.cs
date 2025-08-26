@@ -29,6 +29,8 @@ public class EvilWizardParameter{
 
     public EnemyHealthManager healthManager;
 
+    public WizardSoundManager soundManager;
+
     public Knight knight;
 
     public GameObject ew1HurtBox;

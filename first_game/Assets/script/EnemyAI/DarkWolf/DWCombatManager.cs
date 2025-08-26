@@ -21,14 +21,14 @@ public class DWCombatManager : EnemyCombatManager
 
     public static float NORMAL_DAMAGE = 15f;
 
-    public static float CHARGE_DAMAGE = 30f;
+    public static float CHARGE_DAMAGE = 40f;
 
     private float getHitCount;
 
     private int randomThreshold;
 
     [SerializeField] private float curInvulnerableTimer;
-    private float invulnerableTimer = 5f; // 5 seconds
+    private float invulnerableTimer = 2f; // 5 seconds
     
     [SerializeField] private Knight knight;
 
@@ -42,6 +42,9 @@ public class DWCombatManager : EnemyCombatManager
 
     private bool hasCleared;
 
+    [SerializeField] private GameObject ShieldIcon;
+
+    [SerializeField] private GameObject VulnerableIcon;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -52,8 +55,56 @@ public class DWCombatManager : EnemyCombatManager
     void Update()
     {
         CheckWolfHealthStatus();
+
         UpdateCurInvulnerableTimer();
+
         CheckHasCleared();
+
+        SetFeedback();
+
+        UpdateInvulnerableState();
+
+        UpdateVulnerableState();
+
+    }
+    private void UpdateInvulnerableState(){
+        if(curInvulnerableTimer > 0){
+            // activate shield icon.
+            ShieldIcon.SetActive(true);
+        }
+        else{
+            // disable shield icon
+            ShieldIcon.SetActive(false);
+        }
+    }
+
+    private void UpdateVulnerableState(){
+        if(isVulnerable){
+            VulnerableIcon.SetActive(true);
+        }
+        else{
+            VulnerableIcon.SetActive(false);
+        }
+    }
+    public override void SetFeedback(){
+        if(isCharging){
+            base.sourceFeedback.stopTime = 0.5f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.3f;
+
+            base.sourceFeedback.frequency = 0.3f;
+        }
+        else{
+            base.sourceFeedback.stopTime = 0.25f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.2f;
+
+            base.sourceFeedback.frequency = 0.2f;
+        }
     }
     private void UpdateCurInvulnerableTimer(){
         if(curInvulnerableTimer >= 0){
@@ -74,6 +125,7 @@ public class DWCombatManager : EnemyCombatManager
     }
 
     public IEnumerator FadeOut(){
+        
         float duration = 1f;
         float elapsed = 0f;
 
@@ -87,6 +139,7 @@ public class DWCombatManager : EnemyCombatManager
             elapsed += Time.deltaTime;
             yield return null;
         }
+        
     }
 
     public float CalculateDistance(){
@@ -99,12 +152,16 @@ public class DWCombatManager : EnemyCombatManager
         isCharging = true;
         // charge-up before charging
 
+        // pass bool to audio manager to change pattern
+        darkWolf.parameter.audioManager.SetWolfIsCharging(true);
+
         // play the 5th frame of the animation
         float frame = 5f;
         float totalFrame = 60f;
         float normalizedTime = frame / totalFrame;
         darkWolf.parameter.animator.Play("RunWithoutCollider", 0, normalizedTime);
 
+        darkWolf.parameter.soundManager.PlayPreDashSound();
         // freeze time
         darkWolf.parameter.animator.speed = 0f;
         // charge-up for 1.5s
@@ -156,11 +213,16 @@ public class DWCombatManager : EnemyCombatManager
         darkWolf.parameter.rb.linearVelocity = Vector2.zero;
     
         isCharging = false;
+        // pass bool to audio manager to change pattern
+        darkWolf.parameter.audioManager.SetWolfIsCharging(false);
     }
 
     public IEnumerator GoingBerserk(){
+        // change tag to avoid hit temporarily
+        darkWolf.parameter.dwHurtBox.tag = "Untagged";
         isGoingBerserk = true;
 
+        darkWolf.parameter.audioManager.PlayWolfHowlingSound();
         float frame = 10f;
         float totalFrame = 60f;
         float normalizedTime = frame / totalFrame;
@@ -172,12 +234,13 @@ public class DWCombatManager : EnemyCombatManager
 
         darkWolf.parameter.animator.speed = 1f;
         isGoingBerserk = false;
+        darkWolf.parameter.dwHurtBox.tag = "Enemy";
     }
 
     public IEnumerator RaisePenalty(){
         isInPenalty = true;
-
-        
+        // prevent blending
+        curInvulnerableTimer = -1;
         darkWolf.parameter.animator.Play("DarkWolf_2d_Damage Animation");
 
         yield return new WaitForSeconds(1.5f);
@@ -226,12 +289,18 @@ public class DWCombatManager : EnemyCombatManager
         if(isVulnerable){
             //!!!!!!!!!!!!!!!!!!
             // take damage and play animation
-            darkWolf.parameter.healthManager.TakeDamage(data.damage);
+            darkWolf.parameter.healthManager.TakeDamage(data.damage * 2f);
+            darkWolf.parameter.animator.Play("DarkWolf_2d_Idle Animation");
             darkWolf.parameter.animator.Play("DarkWolf_2d_Damage Animation");
             return;
         }
-        // always responds to knock back and take damage    
-        darkWolf.parameter.healthManager.TakeDamage(data.damage);
+        // charging is not breakable
+        if(isCharging){
+            darkWolf.parameter.healthManager.TakeDamage(data.damage);
+            return;
+        }
+        // always responds to knock back
+        
         // recover transparency
         Color c = darkWolf.parameter.SR.color;
         c.a = 1f;
@@ -247,6 +316,7 @@ public class DWCombatManager : EnemyCombatManager
             return;
         }
 
+        
         // cache get hit threshold 
         if(getHitCount == 0){
             randomThreshold = Random.Range(2, 5); // [2,5)
@@ -256,6 +326,10 @@ public class DWCombatManager : EnemyCombatManager
         if(!HaveSuperArmor()){
             // if not yet, dark wolf still responds.
             darkWolf.TransitionState(DarkWolfStateType.Hurt);
+            if(knight.parameter.combatManager.ShouldKnockback()){
+                GetKnockedBack(data.knockBackDir, 10f);
+            }
+            darkWolf.parameter.healthManager.TakeDamage(data.damage);
             // increment get hit count
             getHitCount ++;
         }
@@ -290,9 +364,6 @@ public class DWCombatManager : EnemyCombatManager
         darkWolf.parameter.rb.AddForce(new Vector2(force * dir, 0), ForceMode2D.Impulse);
     }
     private bool HaveSuperArmor(){
-        if(isCharging){
-            return true;
-        }
         if(getHitCount >= randomThreshold){
             return true;
         }
@@ -310,7 +381,9 @@ public class DWCombatManager : EnemyCombatManager
             return;
         }
         if(darkWolf.parameter.healthManager.isDead){
+            // Debug.Log("it is being repeatly called");
             EventManager.RaiseExitBossFight(gpCoordinator.curArena);
+            hasCleared = true;
         }
     }
 }

@@ -22,9 +22,7 @@ public class NSCombatManager : EnemyCombatManager
     private int randomThreshold;
     
     [SerializeField] private float curInvulnerableTimer;
-    private float invulnerableTimer = 5f; // 5 seconds
-
-    
+    private float invulnerableTimer = 2f;
 
     /*
         1. if a skeleton gets attacked, after the animation fully played,  *
@@ -55,7 +53,7 @@ public class NSCombatManager : EnemyCombatManager
 
     [SerializeField] private float curFlankerAttackTimer;
 
-
+    [SerializeField] private GameObject ShieldIcon;
     /*
         2. 1 flanker will sneak around and hunt player with a swifter speed but less HP.
             - flanker will keep distance with the player.(sneaky state). 
@@ -98,6 +96,31 @@ public class NSCombatManager : EnemyCombatManager
         UpdateCurDecideTimer();
 
         UpdateCurFlankerAttackTimer();
+
+        SetFeedback();
+
+        UpdateInvulnerableState();
+
+        UpdateDamage();
+    }
+
+    private void UpdateDamage(){
+        if(currentRole == SkeletonRole.Flanker){
+            base.damage = 15f;
+        }
+        else{
+            base.damage = 7f;
+        }
+    }
+    private void UpdateInvulnerableState(){
+        if(curInvulnerableTimer > 0){
+            // activate shield icon.
+            ShieldIcon.SetActive(true);
+        }
+        else{
+            // disable shield icon
+            ShieldIcon.SetActive(false);
+        }
     }
 
     public void CalculateDistance(){
@@ -206,6 +229,8 @@ public class NSCombatManager : EnemyCombatManager
             return;
         }
 
+        // change hurt box tag to none to prevent further hit feedback
+        this.newSkeleton.parameter.nsHurtBox.tag = "Untagged";
         // transition to death;
         this.newSkeleton.TransitionState(NSStateType.Die);
 
@@ -229,18 +254,14 @@ public class NSCombatManager : EnemyCombatManager
             return;
         }
         
-        // skeleton is sure to take damage
-        newSkeleton.parameter.healthManager.TakeDamage(data.damage);
-
-        // do attack sense and special hurt feedback here.
-
         if(knight.parameter.combatManager.isShieldStriking){
             GetKnockedBack(data.knockBackDir, 10f);
         }
+        
 
         // if is in invulnerable state
         if(curInvulnerableTimer > 0){
-            // do blocked effect here!!!
+            
             return;
         }
 
@@ -255,6 +276,12 @@ public class NSCombatManager : EnemyCombatManager
             newSkeleton.TransitionState(NSStateType.Hurt);
             // increment get hit count
             getHitCount ++;
+            // if player is doing power attack second combo or light attack third combo, get knocked back
+            if(knight.parameter.combatManager.ShouldKnockback()){
+                GetKnockedBack(data.knockBackDir, 10f);
+            }
+            newSkeleton.parameter.healthManager.TakeDamage(data.damage);
+
         }
         else{
             // set invulnerability timer and reset get hit count
@@ -310,7 +337,7 @@ public class NSCombatManager : EnemyCombatManager
         // set damage
         base.isAttacking = true;
 
-        base.damage = 7f; // hardcoded damage
+        
         
         newSkeleton.parameter.animator.Play("Attack1");
 
@@ -327,7 +354,7 @@ public class NSCombatManager : EnemyCombatManager
         // play animation
         base.isAttacking = true;
 
-        base.damage = 7f; // hardcoded damage
+        
 
         newSkeleton.parameter.animator.Play("Attack2");
 
@@ -348,7 +375,7 @@ public class NSCombatManager : EnemyCombatManager
         // play combo animation
         base.isAttacking = true;
 
-        base.damage = 7f; // hardcoded damage
+        
 
         // disable velocity
         newSkeleton.parameter.movementManager.DisableVelocity();
@@ -372,5 +399,15 @@ public class NSCombatManager : EnemyCombatManager
         int randomAttackInterval = UnityEngine.Random.Range(3, 6); // [3, 5)
         flankerAttackTimer = randomAttackInterval;
         curFlankerAttackTimer = flankerAttackTimer;
+    }
+
+    public override void SetFeedback(){
+        base.sourceFeedback.stopTime = 0.2f;
+
+        base.sourceFeedback.duration = 0.1f;
+
+        base.sourceFeedback.amplitude = 0.1f;
+
+        base.sourceFeedback.frequency = 0.1f;
     }
 }

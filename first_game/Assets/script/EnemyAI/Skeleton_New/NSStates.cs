@@ -116,6 +116,8 @@ public class NSHurtState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        parameter.movementManager.DisableVelocity();
+        parameter.soundManager.PlayHurtSound();
         parameter.nsCombatManager.StartCoroutine(parameter.nsCombatManager.ExecuteGetHit());
     }
 

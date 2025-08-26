@@ -1,7 +1,9 @@
 using UnityEngine;
 using System.Collections;
+
 public class CombatManager : MonoBehaviour
-{
+{   
+
     /*
         Combat Manager:
         1. Implement 7 attacks: light1, 2, 3. heavy1, 2. RunAttack, JumpAttack
@@ -39,6 +41,11 @@ public class CombatManager : MonoBehaviour
         7. Jump & Run Attacks: *
             - Slightly stronger than light attacks.
             - Agile and effective for **engaging enemies** or performing **surprise strikes**.
+        
+
+        8. the second combo of heavy hit will have hit stop and camera shake
+
+        9. the third combo of light hit will have hit stop and camera shake
     */
     //  combo system:
         /*
@@ -73,7 +80,7 @@ public class CombatManager : MonoBehaviour
     private float heavyAttackTimer = 3f;
     [SerializeField] private float curHeavyAttackComboTimer;
 
-    [SerializeField] private Knight knight;
+    public Knight knight;
 
     public bool isLightAttacking;
 
@@ -95,17 +102,21 @@ public class CombatManager : MonoBehaviour
 
     public float knockBackForce;
 
+    [Header("Combat Feedback")]
+
+    public FeedbackData sourceFeedback;
+
     [Header("AttackStepFlag")]
     public string curLightAttack;
 
     public string curHeavyAttack;
-    void Start(){
-    }
+    
     void Update(){
         SetDamage();
 
         ResetAttackFlags();
     }
+    
     void OnEnable(){
         EventManager.OnHitOccured += GetHit;
         EventManager.OnKnightDied += Die;
@@ -116,6 +127,23 @@ public class CombatManager : MonoBehaviour
         EventManager.OnKnightDied -= Die;
     }
 
+    public void ResetAllFlags(){
+        isLightAttacking = false;
+
+        isHeavyAttacking = false;
+
+        isDefending = false;
+
+        isShieldStriking = false;
+
+        isJumpAttacking = false;
+
+        isRunAttacking = false;
+        
+        getHit = false;
+   
+    }
+    
     public void MultiplyCurDamage(){
         damage *= damageMultiplier;
     }
@@ -127,6 +155,7 @@ public class CombatManager : MonoBehaviour
     public void Die(){
         // transition to death
         knight.TransitionState(KnightStateTypes.Die);
+        knight.parameter.knightHurtBox.tag = "Untagged";
     }
 
     private void SetDamage(){
@@ -134,16 +163,16 @@ public class CombatManager : MonoBehaviour
             damage = 20f;
         }
         else if(isHeavyAttacking){
-            damage = 30f;
+            damage = 40f;
         }
         else if(isShieldStriking){
             damage = 1f;
         }
         else if(isJumpAttacking){
-            damage = 25f;
+            damage = 50f;
         }
         else if(isRunAttacking){
-            damage = 20f;
+            damage = 25f;
         }
         else{
             damage = 0;
@@ -175,7 +204,26 @@ public class CombatManager : MonoBehaviour
             3. Drain stamina
             4. disable prev speed, assign a new one
         */
-        
+
+        // if it current combo is the last one, apply hit feel
+        if(curLightAttack == "Attack3"){
+            sourceFeedback.stopTime = 0.1f;
+
+            sourceFeedback.duration = 0.1f;
+
+            sourceFeedback.amplitude = 0.1f;
+
+            sourceFeedback.frequency = 0.1f;
+        }
+        else{
+            sourceFeedback.stopTime = 0.05f;
+
+            sourceFeedback.duration = 0.1f;
+
+            sourceFeedback.amplitude = 0.1f;
+
+            sourceFeedback.frequency = 0.1f;
+        }
         isLightAttacking = true;
 
         // set flag to record combo step
@@ -198,6 +246,25 @@ public class CombatManager : MonoBehaviour
             3. Drain stamina
             4. disable prev speed, assign a new one
         */
+        // if the combo is the second step, apply hit feedback
+        if(curHeavyAttack == "PowerAttack1"){
+            sourceFeedback.stopTime = 0.2f;
+
+            sourceFeedback.duration = 0.1f;
+
+            sourceFeedback.amplitude = 0.15f;
+
+            sourceFeedback.frequency = 0.15f;
+        }
+        else{
+            sourceFeedback.stopTime = 0.1f;
+
+            sourceFeedback.duration = 0.1f;
+
+            sourceFeedback.amplitude = 0.1f;
+
+            sourceFeedback.frequency = 0.1f;
+        }
         isHeavyAttacking = true;
         
         // set flag to record heavy attack step
@@ -221,6 +288,14 @@ public class CombatManager : MonoBehaviour
             4. drain stamina
             
         */
+        sourceFeedback.stopTime = 0.1f;
+
+        sourceFeedback.duration = 0.1f;
+
+        sourceFeedback.amplitude = 0.1f;
+
+        sourceFeedback.frequency = 0.1f;
+
         isShieldStriking = true;
 
         knight.parameter.animator.Play("ShieldStrike");
@@ -261,7 +336,6 @@ public class CombatManager : MonoBehaviour
 
         yield return AnimationFinishes("RunAttack", Mathf.Abs(knight.parameter.RB.linearVelocity.x));
 
-        // do stamina here.
         
         isRunAttacking = false;
     }
@@ -425,6 +499,13 @@ public class CombatManager : MonoBehaviour
         
     }
     public IEnumerator ExecuteGetHit(HitData data){
+
+        if(data.knockBackDir > 0){
+            data.knockBackDir = 1;
+        }
+        else{
+            data.knockBackDir = -1;
+        }
         GameObject curInitiator = data.initiator;
         // set flag
         getHit = true;
@@ -438,22 +519,78 @@ public class CombatManager : MonoBehaviour
         // if get crashed by a charging wolf:
         var dwCombat = data.initiator.GetComponentInParent<DWCombatManager>();
         if(dwCombat != null && dwCombat.isCharging){
-            // use committed knock back direction
+            
             // Debug.Log(dwCombat.knockBackDir);
             int curFacing = 0;
+
+            // cache player facing direction
             if(transform.localScale.x > 0){
                 curFacing = 1;
             }
             else{
                 curFacing = -1;
             }
+
+            // use committed knock back direction
             if(curFacing != dwCombat.knockBackDir){
                 data.knockBackDir = -1;
             }
             else{
                 data.knockBackDir = 1;
             }
-            GetKnockedBack(data.knockBackDir, data.damage);
+            GetKnockedBack(data.knockBackDir, 50f);
+        }
+        
+        // if get heavy attacked by the wizard
+        var ewCombat1 = data.initiator.GetComponentInParent<EW1CombatManager>();
+        var ewCombat2 = data.initiator.GetComponentInParent<EW2CombatManager>();
+
+        if(ewCombat1 != null && ewCombat1.isHeavyAttacking){
+            // cache player facing direction
+
+            int curFacing = 0;
+
+            if(transform.localScale.x > 0){
+                curFacing = 1;
+            }
+            else{
+                curFacing = -1;
+            }
+
+            // Debug.Log($"Incoming dir :{data.knockBackDir}");
+            if(curFacing != data.knockBackDir){
+                data.knockBackDir = -1;
+            }
+            else{
+                data.knockBackDir = 1;
+            }
+
+            
+            // Debug.Log($"Modified dir :{data.knockBackDir}");
+                                
+
+            GetKnockedBack(data.knockBackDir, 50f);
+        }
+        if(ewCombat2 != null && ewCombat2.isHeavyAttacking){
+            // cache player facing direction
+
+            int curFacing = 0;
+
+            if(transform.localScale.x > 0){
+                curFacing = 1;
+            }
+            else{
+                curFacing = -1;
+            }
+
+            
+            if(curFacing != data.knockBackDir){
+                data.knockBackDir = -1;
+            }
+            else{
+                data.knockBackDir = 1;
+            }
+            GetKnockedBack(data.knockBackDir, 50f);
         }
         // make sure to finish animation and disable speed.
         yield return AnimationFinishes("hurt", knight.parameter.RB.linearVelocity.x);
@@ -464,7 +601,7 @@ public class CombatManager : MonoBehaviour
     }
 
     // determine when animation can be broken
-    private bool IsInvincible(){
+    public bool IsInvincible(){
         // prob disable hurt box collider
         if(knight.parameter.movementManager.isRolling){
             return true;
@@ -488,4 +625,13 @@ public class CombatManager : MonoBehaviour
         knight.parameter.RB.AddForce(new Vector2(force * dir, 0), ForceMode2D.Impulse);
     }
     
+    public bool ShouldKnockback(){
+        if(curLightAttack == "Attack3"){
+            return true;
+        }
+        if(curHeavyAttack == "PowerAttack1"){
+            return true;
+        }
+        return false;
+    }
 }

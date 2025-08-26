@@ -21,9 +21,9 @@ public class EW1CombatManager : EnemyCombatManager
 
     public bool isCasting;
 
-    private bool isHeavyAttacking;
+    public bool isHeavyAttacking;
     [SerializeField] private float curInvulnerableTimer;
-    private float invulnerableTimer = 5f; // 5 seconds
+    private float invulnerableTimer = 2f; // 5 seconds
     
     [SerializeField] private Knight knight;
 
@@ -32,6 +32,30 @@ public class EW1CombatManager : EnemyCombatManager
     public static float LIGHT_DAMAGE = 15f;
 
     public static float LASER_DAMAGE = 20f;
+
+    [SerializeField] private GameObject ShieldIcon; 
+
+    [SerializeField] private GameObject VulnerableIcon;
+    private void SetFeedback(){
+        if(isHeavyAttacking){
+            base.sourceFeedback.stopTime = 0.5f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.4f;
+
+            base.sourceFeedback.frequency = 0.4f;
+        }
+        else{
+            base.sourceFeedback.stopTime = 0.25f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.2f;
+
+            base.sourceFeedback.frequency = 0.2f;
+        }
+    }
 
     void OnEnable(){
         EventManager.OnEnemyDied += Die;
@@ -46,6 +70,31 @@ public class EW1CombatManager : EnemyCombatManager
 
     void Update(){
         UpdateCurInvulnerableTimer();
+
+        SetFeedback();
+
+        UpdateInvulnerableState();
+
+        UpdateVulnerableState();
+    }
+
+    private void UpdateInvulnerableState(){
+        if(curInvulnerableTimer >= 0){
+            // activate shield icon.
+            ShieldIcon.SetActive(true);
+        }
+        else{
+            // disable shield icon
+            ShieldIcon.SetActive(false);
+        }
+    }
+    private void UpdateVulnerableState(){
+        if(isInPenalty){
+            VulnerableIcon.SetActive(true);
+        }
+        else{
+            VulnerableIcon.SetActive(false);
+        }
     }
     private void UpdateCurInvulnerableTimer(){
         if(curInvulnerableTimer >= 0){
@@ -110,9 +159,11 @@ public class EW1CombatManager : EnemyCombatManager
         base.isAttacking = true;
         isHeavyAttacking = true;
 
-        evilWizard.parameter.animator.Play("Attack2");
+        evilWizard.parameter.animator.Play("Cast");
+
+        evilWizard.parameter.soundManager.PlayAngrySound();
         // Wait for animation to start playing
-        while (!evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0).IsName("Attack2")) {
+        while (!evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0).IsName("Cast")) {
             yield return null;
         }
         AnimatorStateInfo info = evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0);
@@ -165,7 +216,6 @@ public class EW1CombatManager : EnemyCombatManager
         // dodge time for player before initialising attack
         yield return new WaitForSeconds(0.6f);
         base.isAttacking = false;
-        isHeavyAttacking = false;
     }
 
     public IEnumerator Penalty(){
@@ -180,23 +230,11 @@ public class EW1CombatManager : EnemyCombatManager
 
     public IEnumerator PlayDeathAndSetOutPhase2(){
 
-        evilWizard.parameter.animator.Play("Death");
+        evilWizard.TransitionState(EvilWizardStateTypes.DeathMode1);
+        evilWizard.parameter.soundManager.PlayScreamSound();
 
-        // make sure to enter animation first
-        while(!evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0).IsName("Death")){
-            yield return null;
-        }
-
-        // play animation thoroughly
-        AnimatorStateInfo info = evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0);
-        while(true){
-            info = evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0);
-            if(info.normalizedTime >= 0.99f){
-                break;
-            }
-            yield return null;
-        }
-
+        yield return new WaitForSeconds(1f);
+        evilWizard.parameter.soundManager.PlaySetOutPhase2Sound();
         evilWizard.parameter.Phase2Wizard.SetActive(true);
         
     }
@@ -217,9 +255,14 @@ public class EW1CombatManager : EnemyCombatManager
         if(data.targetHurtBox != evilWizard.parameter.ew1HurtBox){
             return;
         }
+        if(isHeavyAttacking || isCasting){
+            // only take damage, action is not breakable
+            evilWizard.parameter.healthManager.TakeDamage(data.damage);
+            return;
+        }
 
-        // always respond to knock back and take damage
-        evilWizard.parameter.healthManager.TakeDamage(data.damage);
+        // always respond to knock back
+        
         if(knight.parameter.combatManager.isShieldStriking){
             GetKnockedBack(data.knockBackDir, 10f);
         }
@@ -232,13 +275,21 @@ public class EW1CombatManager : EnemyCombatManager
 
         // cache get hit threshold 
         if(getHitCount == 0){
-            randomThreshold = Random.Range(2, 5); // [2,5)
+            randomThreshold = Random.Range(3, 5); // 3-4
         }
 
-        // check if dark wolf has been spammed
+        // when attack can be broken
         if(!HaveSuperArmor()){
-            // if not yet, dark wolf still responds.
+            evilWizard.parameter.healthManager.TakeDamage(data.damage);
+            if(isInPenalty){
+                // take double damage
+                evilWizard.parameter.healthManager.TakeDamage(data.damage);
+            }
+            // if not yet, still responds.
             evilWizard.TransitionState(EvilWizardStateTypes.Hurt);
+            if(knight.parameter.combatManager.ShouldKnockback()){
+                GetKnockedBack(data.knockBackDir, 10f);
+            }
             // increment get hit count
             getHitCount ++;
         }
@@ -253,7 +304,8 @@ public class EW1CombatManager : EnemyCombatManager
         // set flag
         getHit = true;
         
-        // get knocked back
+        // to be overidden
+        evilWizard.parameter.animator.Play("Idle");
 
         // play animation
         evilWizard.parameter.animator.Play("Hurt");
@@ -268,8 +320,11 @@ public class EW1CombatManager : EnemyCombatManager
         if(evilWizard != this.evilWizard.gameObject){
             return;
         }
+        this.evilWizard.parameter.ew1HurtBox.tag = "Untagged";
         // disable all coroutines
         StopAllCoroutines();
+        ShieldIcon.SetActive(false);
+        VulnerableIcon.SetActive(false);
         StartCoroutine(PlayDeathAndSetOutPhase2());
     }
 
@@ -285,12 +340,6 @@ public class EW1CombatManager : EnemyCombatManager
         evilWizard.parameter.RB.AddForce(new Vector2(force * dir, 0), ForceMode2D.Impulse);
     }
     private bool HaveSuperArmor(){
-        if(isHeavyAttacking){
-            return true;
-        }
-        if(isCasting){
-            return true;
-        }
         if(getHitCount >= randomThreshold){
             return true;
         }

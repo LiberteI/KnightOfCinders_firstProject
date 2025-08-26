@@ -55,6 +55,14 @@ public class EW2CombatManager : EnemyCombatManager
 
     public bool getHit;
 
+    public bool isAttackingWithoutEffect;
+
+    public bool isHeavyAttacking;
+
+    private bool hasCleared;
+
+    public bool isVulnerable;
+
     [Header("Brain")]
     public EvilWizardPhase2 evilWizard;
 
@@ -71,25 +79,35 @@ public class EW2CombatManager : EnemyCombatManager
 
     public GameObject ew2HurtBox;
 
+    private GameObject healthBarObj2;
+
     [Header("Get hit")]
     private float getHitCount;
 
     private int randomThreshold;
 
     [SerializeField] private float curInvulnerableTimer;
-    private float invulnerableTimer = 5f; // 5 seconds
+    private float invulnerableTimer = 2f; // 5 seconds
 
     public float knockBackDir;
 
     private HitData data;
 
-    public bool isVulnerable;
+    
 
     public Knight knight;
 
     [SerializeField] private GamePlayCoordinator gpCoordinator;
 
-    private bool hasCleared;
+    public AudioFeedbackManager audioFeedbackManager;
+
+    
+
+    [SerializeField] private GameObject ShieldIcon;
+
+    [SerializeField] private GameObject VulnerableIcon;
+
+
     void Start(){
         healthThresholdPhase1 = 0.66f * evilWizard.parameter.healthManager.maxHealth;
 
@@ -97,11 +115,39 @@ public class EW2CombatManager : EnemyCombatManager
     }
     void Update(){
         CheckHomingLaserEndingTime();
+
         CheckLaserWallEndingTime();
+
         CheckWolfDeathTime();
+
         UpdateCurInvulnerableTimer();
+
         ChangeTransparencyIfInvincible();
-        CheckHasCleared();
+
+        SetFeedback();
+
+        UpdateInvulnerableState();
+        
+        UpdateVulnerableState();
+    }
+    private void UpdateInvulnerableState(){
+        if(curInvulnerableTimer > 0){
+            // activate shield icon.
+            ShieldIcon.SetActive(true);
+        }
+        else{
+            // disable shield icon
+            ShieldIcon.SetActive(false);
+        }
+    }
+
+    private void UpdateVulnerableState(){
+        if(isVulnerable){
+            VulnerableIcon.SetActive(true);
+        }
+        else{
+            VulnerableIcon.SetActive(false);
+        }
     }
     void OnEnable(){
         // Debug.Log($"{name} subscribing to OnEnemyDied");
@@ -116,6 +162,26 @@ public class EW2CombatManager : EnemyCombatManager
         EventManager.OnHitOccured -= GetHit;
     }
 
+    private void SetFeedback(){
+        if(isAttackingWithoutEffect){
+            base.sourceFeedback.stopTime = 0.5f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.3f;
+
+            base.sourceFeedback.frequency = 0.3f;
+        }
+        else{
+            base.sourceFeedback.stopTime = 0.25f;
+
+            base.sourceFeedback.duration = 0.1f;
+
+            base.sourceFeedback.amplitude = 0.2f;
+
+            base.sourceFeedback.frequency = 0.2f;
+        }
+    }
     private void UpdateCurInvulnerableTimer(){
         if(curInvulnerableTimer >= 0){
             curInvulnerableTimer -= Time.deltaTime;
@@ -185,7 +251,7 @@ public class EW2CombatManager : EnemyCombatManager
         if(evilWizard != this.evilWizard.gameObject){
             return;
         }
-
+        ew2HurtBox.tag = "Untagged";
         // transition to death
 
         this.evilWizard.TransitionState(Phase2StatesTypes.Phase2Death);
@@ -213,14 +279,13 @@ public class EW2CombatManager : EnemyCombatManager
         if(isVulnerable){
             //!!!!!!!!!!!!!!!!!!
             // take damage and play animation
-            evilWizard.parameter.healthManager.TakeDamage(data.damage);
+            evilWizard.parameter.healthManager.TakeDamage(data.damage * 2f);
+            // play idle to be overidden
+            evilWizard.parameter.animator.Play("Idle");
             evilWizard.parameter.animator.Play("Hurt");
             return;
         }
-        // always responds to knock back and take damage    
-        evilWizard.parameter.healthManager.TakeDamage(data.damage);
-        
-
+        // always responds to knock back  
         if(knight.parameter.combatManager.isShieldStriking){
             GetKnockedBack(data.knockBackDir, 10f);
         }
@@ -238,8 +303,10 @@ public class EW2CombatManager : EnemyCombatManager
 
         // check if dark wolf has been spammed
         if(!HaveSuperArmor()){
+            evilWizard.parameter.healthManager.TakeDamage(data.damage);
             // if not yet, dark wolf still responds.
             evilWizard.TransitionState(Phase2StatesTypes.Hurt);
+
             // increment get hit count
             getHitCount ++;
         }
@@ -285,8 +352,8 @@ public class EW2CombatManager : EnemyCombatManager
         if(IsInvincible()){
             Color color = evilWizard.parameter.SR.color;
 
-            // set transparency to half
-            color.a = 0.5f;
+            // set transparency to 0.2
+            color.a = 0.2f;
 
             evilWizard.parameter.SR.color = color;
         }
@@ -312,6 +379,7 @@ public class EW2CombatManager : EnemyCombatManager
         yield return new WaitForSeconds(1f);
         // Destroy the wolf
         Destroy(currentDarkWolf);
+        Destroy(healthBarObj2);
     }
     private IEnumerator WolfCoolingDown(){
         while(wolfCoolDown > 0){
@@ -493,7 +561,7 @@ public class EW2CombatManager : EnemyCombatManager
     */
     public IEnumerator TeleportAndAttack(){
         base.damage = EW2CombatManager.HEAVY_DAMAGE;
-
+        isHeavyAttacking = true;
         isInCoroutine = true;
 
         Transform portalPrefabTransform = evilWizard.parameter.portalPrefab.transform;
@@ -561,7 +629,7 @@ public class EW2CombatManager : EnemyCombatManager
             yield return null;
         }
         isInCoroutine = false;
-        
+        isHeavyAttacking = false;
     }
     
     /*
@@ -616,10 +684,10 @@ public class EW2CombatManager : EnemyCombatManager
         // cast a spell 
         evilWizard.parameter.animator.Play("Cast");
 
-        // determine portalPrefab and wolf's spawn point
-        float randomSpawnX = UnityEngine.Random.Range(evilWizard.parameter.target.position.x - 20f, evilWizard.parameter.target.position.x + 20f);
+        // determine portalPrefab and wolf's spawn point(next to the player)
+        float spawnPoint = evilWizard.parameter.target.position.x;
 
-        Vector3 randomSpawnPoint = new Vector3(randomSpawnX, evilWizard.parameter.target.position.y + 4f, evilWizard.parameter.target.position.z);
+        Vector3 randomSpawnPoint = new Vector3(spawnPoint, evilWizard.parameter.target.position.y + 4f, evilWizard.parameter.target.position.z);
 
         // make sure to enter cast animation
         while(!evilWizard.parameter.animator.GetCurrentAnimatorStateInfo(0).IsName("Cast")){
@@ -665,7 +733,7 @@ public class EW2CombatManager : EnemyCombatManager
         // set second boss health bar to true(health bar 2)
         Transform healthBar2 = dwContainerObj.transform.Find("HealthBar2");
 
-        GameObject healthBarObj2 = healthBar2.gameObject;
+        healthBarObj2 = healthBar2.gameObject;
 
         healthBarObj2.SetActive(true);
 
@@ -791,13 +859,5 @@ public class EW2CombatManager : EnemyCombatManager
         isInCoroutine = false;
     }
 
-    private void CheckHasCleared(){
-        if(hasCleared){
-            return;
-        }
-        if(evilWizard.parameter.healthManager.isDead){
-            hasCleared = true;
-            EventManager.RaiseExitBossFight(gpCoordinator.curArena);
-        }
-    }
+    
 }

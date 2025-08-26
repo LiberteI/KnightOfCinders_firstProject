@@ -26,6 +26,8 @@ public class NewSkeletonParameter{
     public Rigidbody2D RB;
 
     public UIManager UImanager;
+
+    public SkeletonSoundManager soundManager;
 }
 public class NewSkeleton : MonoBehaviour
 {

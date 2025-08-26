@@ -22,6 +22,9 @@ public class KnightParameter{
     public HealthManager healthManager;
 
     public GameObject knightHurtBox;
+
+    public PlayerSoundManager playerSoundManager;
+
 }
 
 public class Knight : MonoBehaviour

@@ -19,6 +19,29 @@ public static class EventManager{
 
     public static event Action<ArenaSetUp> OnExitBossFight;
 
+    public static event Action<string> OnSceneChanged;
+
+    public static event Action OnWinning;
+
+    public static event Action OnDefeat;
+
+    public static void RaiseDefeat(){
+        if(OnDefeat != null){
+            OnDefeat();
+        }
+    }
+
+    public static void RaiseWinning(){
+        if(OnWinning != null){
+            OnWinning();
+        }
+    }
+
+    public static void RaiseSceneChanged(string newScene){
+        if(OnSceneChanged != null){
+            OnSceneChanged(newScene);
+        }
+    }
     public static void KnightHealthChanged(GameObject knight, float curHealth, float maxHealth){
         if(OnKnightHealthChanged != null){
             OnKnightHealthChanged(knight, curHealth, maxHealth);

@@ -29,9 +29,13 @@ public class DarkWolfParameter{ // global space: cant be the same as that of Ske
 
     public DWMovementManager dwMovementManager;
 
+    public AudioFeedbackManager audioManager;
+
     public Knight knight;
 
     public GameObject dwHurtBox;
+
+    public WolfSoundManager soundManager;
 
 }
 // the dark wolf is a small boss which has 2 modes. 

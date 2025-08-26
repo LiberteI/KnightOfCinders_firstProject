@@ -89,7 +89,7 @@ public class EWAttackMode1_1State : StateTransitionInterface
         
     }
     public void OnExit(){
-        
+       
     }
 }
 
@@ -116,7 +116,7 @@ public class EWAttackMode1_2State : StateTransitionInterface
         manager.TransitionState(EvilWizardStateTypes.Vulnerable);
     }
     public void OnExit(){
-        
+        parameter.combatManager.isHeavyAttacking = false;
     }
 }
 
@@ -131,9 +131,10 @@ public class EWDeathMode1State : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        
         // disable velocity
         parameter.movementManager.DisableVelocity();
-        parameter.combatManager.StartCoroutine(parameter.combatManager.PlayDeathAndSetOutPhase2());
+        parameter.animator.Play("Death");
         
     }
     public void OnUpdate(){
@@ -231,6 +232,7 @@ public class EWVulnerableState : StateTransitionInterface{
     }
 
     public void OnEnter(){
+        parameter.soundManager.PlayPainfulSound();
         parameter.combatManager.StartCoroutine(parameter.combatManager.Penalty());
     }
 
@@ -257,6 +259,8 @@ public class EWHurtStatePhase1 : StateTransitionInterface{
     }
 
     public void OnEnter(){
+        parameter.movementManager.DisableVelocity();
+        parameter.soundManager.PlayHurtSound();
         parameter.combatManager.StartCoroutine(parameter.combatManager.ExecuteGetHit());
     }
 
@@ -351,7 +355,10 @@ public class EWAttackWithoutEffectState : StateTransitionInterface
     }
     public void OnEnter(){
         parameter.combatManager.damage = EW2CombatManager.LIGHT_DAMAGE;
+        parameter.combatManager.audioFeedbackManager.shouldPlayBladeSound = true;
         parameter.animator.Play("Attack-NoEffect");
+        parameter.combatManager.isAttackingWithoutEffect = true;
+        
         parameter.RB.linearVelocity = Vector2.zero;
         
     }
@@ -363,7 +370,8 @@ public class EWAttackWithoutEffectState : StateTransitionInterface
         manager.TransitionState(Phase2StatesTypes.Phase2Decide);
     }
     public void OnExit(){
-        
+        parameter.combatManager.isAttackingWithoutEffect = false;
+        parameter.combatManager.audioFeedbackManager.shouldPlayBladeSound = false;
     }
 }
 
@@ -484,6 +492,8 @@ public class EWHurtState : StateTransitionInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        parameter.movementManager.DisableVelocity();
+        parameter.soundManager.PlayHurtSound();
         parameter.combatManager.StartCoroutine(parameter.combatManager.ExecuteGetHit());
     }
     public void OnUpdate(){
@@ -513,16 +523,18 @@ public class EWPhase2VulnerableState : StateTransitionInterface
         timer = 0;
         // play vulnerable animation
         parameter.animator.Play("Hurt-NoEffect");
+        parameter.soundManager.PlayVulnerableSound();
+        parameter.combatManager.isVulnerable = true;
     }
     public void OnUpdate(){
         timer += Time.deltaTime;
-        if(timer <= 3f){
+        if(timer <= 1.5f){
             return;
         }
         manager.TransitionState(Phase2StatesTypes.Phase2Decide);
     }
     public void OnExit(){
-        
+        parameter.combatManager.isVulnerable = false;
     }
 }
 public class Phase2DeathState : StateTransitionInterface
@@ -531,17 +543,36 @@ public class Phase2DeathState : StateTransitionInterface
 
     private EvilWizardPhase2Parameter parameter;
 
+    private AnimatorStateInfo info;
+
+    private bool hasTriggered;
+
     public Phase2DeathState(EvilWizardPhase2 manager){
         this.manager = manager;
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
         // disable velocity
+        parameter.soundManager.PlayDeathSound();
         parameter.movementManager.DisableVelocity();
         parameter.animator.Play("Death");
+        
     }
     public void OnUpdate(){
-        parameter.animator.Play("Death");
+        
+        info = parameter.animator.GetCurrentAnimatorStateInfo(0);
+        if(!info.IsName("Death")){
+            return;
+        }
+        if(info.normalizedTime <= 1f){
+            return;
+        }
+        if(hasTriggered){
+            return;
+        }
+        EventManager.RaiseWinning();
+        hasTriggered = true;
+        
     }
     public void OnExit(){
         

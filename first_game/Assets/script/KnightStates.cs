@@ -44,6 +44,9 @@ public class KIdleState : PlayerStateInterface
     public void OnExit(){
         parameter.staminaManager.idleBonus = 0;
         parameter.healthManager.healthRenerateBonus = 0f;
+    
+        parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
 
     public void HandleInput(){
@@ -152,7 +155,7 @@ public class KRunState : PlayerStateInterface
     public void OnFixedUpdate(){
         bool success = parameter.staminaManager.DeductStamina(StaminaCostTypes.Run, false);
         if(!success){
-            parameter.movementManager.SetIsRunning(false);
+            
             if(parameter.movementManager.IsMoving()){
                 manager.TransitionState(KnightStateTypes.Walk);
             }
@@ -164,6 +167,8 @@ public class KRunState : PlayerStateInterface
     }
     public void OnExit(){
         
+        
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){
         // ------------------- COMBAT --------------------//
@@ -225,13 +230,13 @@ public class KRunState : PlayerStateInterface
         }
         // transition back to idle if no movement occurs
         if(parameter.movementManager.GetHorizontal() == 0){
-            parameter.movementManager.SetIsRunning(false);
+            
             manager.TransitionState(KnightStateTypes.Idle);
         }
         // transition back to walk if shift is released
         else{
             if(!Input.GetKey(KeyCode.LeftShift)){
-                parameter.movementManager.SetIsRunning(false);
+                
                 manager.TransitionState(KnightStateTypes.Walk);
             }
         }
@@ -253,6 +258,7 @@ public class KWalkState : PlayerStateInterface
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        parameter.movementManager.SetIsRunning(false);
         parameter.staminaManager.walkBonus = 2f;
         parameter.animator.Play("Walk");
     }
@@ -260,6 +266,9 @@ public class KWalkState : PlayerStateInterface
     public void OnFixedUpdate(){}
     public void OnExit(){
         parameter.staminaManager.walkBonus = 0;
+    
+        parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){
         // ------------------- COMBAT --------------------//
@@ -381,8 +390,11 @@ public class KJumpState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+        
+        
+        
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){
         if(Input.GetKeyDown("j")){
@@ -416,8 +428,10 @@ public class KRollState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+        
     }
     public void HandleInput(){
         
@@ -446,6 +460,9 @@ public class KHurtState : PlayerStateInterface
     public void OnEnter(){
         // disable linear velocity
         parameter.RB.linearVelocity = Vector2.zero;
+
+        // play hurt sound
+        parameter.playerSoundManager.PlayHurtSound();
     }
     public void OnUpdate(){
         // Debug.Log("in hurt state");
@@ -455,7 +472,10 @@ public class KHurtState : PlayerStateInterface
         manager.TransitionState(KnightStateTypes.Idle);
     }
     public void OnFixedUpdate(){}
-    public void OnExit(){}
+    public void OnExit(){      
+        parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+    }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
         incomingHitData = data;
@@ -470,20 +490,31 @@ public class KDeathState : PlayerStateInterface
 
     private KnightParameter parameter;
 
+    private AnimatorStateInfo info;
+
     public KDeathState(Knight manager){
         this.manager = manager;
 
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
-        
-    }
-    public void OnUpdate(){
         // play death animation
         parameter.animator.Play("Dead");
     }
+    public void OnUpdate(){
+        info = parameter.animator.GetCurrentAnimatorStateInfo(0);
+
+        if(info.normalizedTime < 0.99f){
+            return;
+        }
+
+        EventManager.RaiseDefeat();
+    }
     public void OnFixedUpdate(){}
-    public void OnExit(){}
+    public void OnExit(){      
+        parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+    }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
 
@@ -520,9 +551,11 @@ public class KDefendState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        parameter.combatManager.isDefending = false;
-        // reset is running
+        
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+        
     }
     public void HandleInput(){
         if(!Input.GetKey("s")){
@@ -556,8 +589,10 @@ public class KAttack1State : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+        
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -585,9 +620,10 @@ public class KAttack2State : PlayerStateInterface
         manager.TransitionState(KnightStateTypes.Idle);
     }
     public void OnFixedUpdate(){}
-    public void OnExit(){
-        // reset is running
+    public void OnExit(){      
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
+        
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -616,8 +652,9 @@ public class KAttack3State : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -646,8 +683,9 @@ public class KRunAttackState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -677,8 +715,9 @@ public class KHeavyAttack1State : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -707,8 +746,9 @@ public class KHeavyAttack2State : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -738,8 +778,9 @@ public class kJumpAttackState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -768,8 +809,9 @@ public class KShieldStrikeState : PlayerStateInterface
     }
     public void OnFixedUpdate(){}
     public void OnExit(){
-        // reset is running
+            
         parameter.movementManager.SetIsRunning(false);
+        parameter.combatManager.ResetAllFlags();
     }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
@@ -795,7 +837,9 @@ public class KInvulnerableState : PlayerStateInterface{
 
     }
     public void OnFixedUpdate(){}
-    public void OnExit(){}
+    public void OnExit(){
+
+    }
     public void HandleInput(){}
     public void OnGetHit(HitData data){
 

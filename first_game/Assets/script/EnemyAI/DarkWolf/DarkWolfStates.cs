@@ -44,7 +44,10 @@ public class DWHurtState : StateTransitionInterface{
         this.parameter = manager.parameter;
     }
     public void OnEnter(){
+        parameter.dwMovementManager.DisableVelocity();
+        parameter.soundManager.PlayHurtSound();
         parameter.dwCombatManager.StartCoroutine(parameter.dwCombatManager.ExecuteGetHit());
+
         
     }
     public void OnUpdate(){
@@ -349,6 +352,7 @@ public class DWVulnerableState : StateTransitionInterface{
     }
 
     public void OnEnter(){
+        parameter.soundManager.PlayVulnerableSound();
         parameter.dwCombatManager.isVulnerable = true;
         parameter.dwCombatManager.StartCoroutine(parameter.dwCombatManager.RaisePenalty());
         // double the damage
