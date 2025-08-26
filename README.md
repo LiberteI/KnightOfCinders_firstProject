@@ -6,7 +6,7 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 ## ✨ Features
 - 4 unique bosses (Dark Wolf, Skeleton Army, Evil Wizard Phase 1, Evil Wizard Phase 2)
   
-- For a detailed breakdown of bosses, abilities, and design features, see [Full Feature List](docs/FEATURES.md).
+- For a detailed breakdown of bosses, abilities, and design features, see [Full Feature List](BOSS_FEATURE.md).
 
 - Versatile player with dynamic movements and combat options
 - For a detailed breakdown of player design features, see [Player feature](PLAYER_FEATURE.md).
