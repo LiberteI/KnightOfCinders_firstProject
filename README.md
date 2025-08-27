@@ -20,7 +20,7 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 - Interactive polished UI system
 
 ## 🎥 Trailer
-[![Watch the trailer](https://img.youtube.com/vi/<VIDEO_ID>/0.jpg)](https://www.youtube.com/watch?v=<VIDEO_ID>)
+[![Watch the trailer](https://img.youtube.com/vi/DgtHopB85VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=DgtHopB85VI)
 
 ## ▶️ Demo
 - [Download the latest build (Google Drive)](https://drive.google.com/file/d/1hqf1JtwtrV-ngLj06k_RqCCNM3AOiRq6/view?usp=drive_link)
@@ -33,11 +33,6 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
   - **H** → Shield Strike  
   - **Left Shift** → Sprint  
   - **Esc** → Quit
-
-## 📷 Screenshots
-![Boss fight](screenshots/bossfight.png)
-![Combat system](screenshots/combat.gif)
-
 
 ## ⚙️ Tech Stack
 - Unity (C#) for core gameplay systems and mechanics
