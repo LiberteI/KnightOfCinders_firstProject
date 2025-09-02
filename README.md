@@ -23,7 +23,7 @@ Play as a noble knight fighting to reclaim the kingdom from an evil wizard and h
 [![Watch the trailer](https://img.youtube.com/vi/DgtHopB85VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=DgtHopB85VI)
 
 ## ▶️ Demo
-- [Download the latest build (Google Drive)](https://drive.google.com/file/d/1hqf1JtwtrV-ngLj06k_RqCCNM3AOiRq6/view?usp=drive_link)
+- [Download the latest build (Google Drive)](https://drive.google.com/file/d/1QigchoK-Ckn5wDokIMy8jG526GJFgCHP/view?usp=sharing)
 - Controls:  
   - **WASD** → Move  
   - **J** → Light Attack  
