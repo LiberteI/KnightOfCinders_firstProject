@@ -353,6 +353,91 @@ Architecturally, this subsystem is valuable because it is not just “enemy AI.�
 
 That separation makes the encounter more dynamic than a standard single-enemy state machine while still keeping the logic understandable.
 3. Arena / encounter progression coordinator
+The arena / progression layer is responsible for turning exploration into structured encounters. Instead of each boss or encounter independently controlling cameras, barriers, and fight lifecycle, `GamePlayCoordinator` acts as the scene-level orchestrator that activates encounters, tracks which arenas have already been triggered, and restores the scene after a fight ends.
+
+**Core responsibility**
+- Detect the player entering key trigger volumes
+- Lock the camera to the active arena
+- Enable temporary arena barriers
+- Activate the encounter’s boss or enemy group
+- Track whether the player is currently inside a boss fight
+- Listen for encounter completion and clean up the arena
+- Detect broader scene regions for ambience and camera transitions
+
+**Shared arena data model**
+- Each major encounter is packaged into an `ArenaSetUp` object.
+- `ArenaSetUp` contains:
+  - left barrier
+  - right barrier
+  - arena camera
+  - current boss / encounter root object
+- This creates a reusable setup structure for the training skeleton, Dark Wolf, skeleton squad, and Evil Wizard encounters.
+
+**Trigger-to-encounter lifecycle**
+- `GamePlayCoordinator.OnTriggerEnter2D()` listens for tagged trigger volumes such as:
+  - `DungeonTrigger`
+  - `WolfTrigger`
+  - `SSTrigger`
+  - `FinalBossTrigger`
+- Each trigger routes into `TriggerArena(...)`.
+- `TriggerArena(...)` checks:
+  - whether the arena config exists
+  - whether the encounter has already been triggered
+- If valid, it:
+  - sets the encounter’s one-shot flag
+  - raises the arena camera priority
+  - enables left and right barriers
+  - activates the boss or encounter root object
+  - broadcasts `EventManager.RaiseEnterBossFight(currentArena)`
+  - stores `curArena` as the active encounter context
+
+Typical activation flow:
+`Player enters trigger -> GamePlayCoordinator.TriggerArena(...) -> camera lock + barriers on + boss active -> RaiseEnterBossFight(curArena) -> fight systems react`
+
+**Event-driven fight lifecycle**
+- `GamePlayCoordinator` subscribes to:
+  - `OnEnterBossFight`
+  - `OnExitBossFight`
+- On enter, it marks `isInBossFight = true`.
+- On exit, it:
+  - disables the current barriers
+  - lowers the arena camera priority
+  - marks `isInBossFight = false`
+
+This means the coordinator owns the arena shell, while the encounter scripts only need to signal when the fight is over.
+
+**Encounter-local completion reporting**
+The actual “fight finished” condition is not centralized in `GamePlayCoordinator`. Instead, each encounter-specific system determines when it is cleared and then raises `EventManager.RaiseExitBossFight(gpCoordinator.curArena)`.
+
+Examples:
+- `TrapDetector` raises exit when the tutorial skeleton dies
+- `DWCombatManager` raises exit when Dark Wolf is cleared
+- `SkeletonCoordinator` raises exit when all skeletons are defeated
+- the final boss chain uses its own death/win flow and progression signaling
+
+This split is useful architecturally:
+- encounter scripts own combat completion conditions
+- `GamePlayCoordinator` owns the shared response to encounter completion
+
+Typical completion flow:
+`Encounter-specific clear condition -> RaiseExitBossFight(curArena) -> GamePlayCoordinator.CleanUpArena(...) -> barriers off + camera reset + exploration resumes`
+
+**Scene-region coordination**
+The same coordinator also handles non-boss scene flow:
+- region triggers such as `SewerRange`, `DungeonRange`, and `FinalRoom` raise or lower camera priorities
+- `DetermineScene()` uses overlap checks and scene labels such as `outside`, `sewer`, `dungeon`, `finalRoom`, and `rainScene`
+- when the scene label changes, it broadcasts `RaiseSceneChanged(curScene)` so ambience systems can react
+
+Typical exploration flow:
+`Player moves through region -> GamePlayCoordinator updates camera priority / currentScene -> EventManager.RaiseSceneChanged(...) -> ambience and presentation systems update`
+
+**Why this matters architecturally**
+- The coordinator prevents boss scripts from duplicating camera and barrier logic
+- It gives all encounters the same lifecycle shape: trigger, lock-in, activate, clear, clean up
+- It separates exploration flow from combat resolution
+- It provides a single integration point between triggers, cameras, barriers, ambience, and encounter activation
+
+This subsystem is a good example of practical orchestration code in a game project. It is not a generic framework, but it does establish a consistent progression pipeline across multiple encounters.
 4. Combat event pipeline
 5. combat system
 - health
