@@ -649,6 +649,91 @@ Overall, the combat system is one of the strongest areas of the project because 
 
 ### Secondary: For a Complete Game
 6. Scene switching, camera system
+The project’s scene and camera logic is built as a practical progression and presentation layer rather than a generic camera framework. It combines Unity scene loading, Cinemachine camera priority switching, region-based exploration cameras, boss-arena camera lock-in, and scene-label broadcasts for ambience systems.
+
+**Scene-level flow**
+- The game flow is split across:
+  - `MainMenu`
+  - `BeginningCutScene`
+  - `level1`
+  - win / defeat cutscene flows that return to `MainMenu`
+- `MainMenu` loads `BeginningCutScene`
+- `CutSceneManager` advances through slide-based narrative scenes and then loads:
+  - `level1` for the opening sequence
+  - `MainMenu` after win or defeat cutscenes
+
+Typical scene flow:
+`MainMenu -> BeginningCutScene -> level1 -> winning / defeat cutscene -> MainMenu`
+
+**Runtime scene-context switching**
+- Once the player is inside `level1`, the game does not load a new gameplay scene for each area.
+- Instead, `GamePlayCoordinator` tracks a lightweight scene-context label through `DetermineScene()`.
+- It distinguishes areas such as:
+  - `outside`
+  - `sewer`
+  - `dungeon`
+  - `finalRoom`
+  - `rainScene`
+- When the detected label changes, it broadcasts `EventManager.RaiseSceneChanged(curScene)`.
+
+This gives the project a “logical scene switching” layer inside one physical level scene.
+
+Typical context flow:
+`Player moves into new region -> DetermineScene() -> currentScene string changes -> RaiseSceneChanged(curScene) -> ambience / environment systems react`
+
+**Exploration camera system**
+- Exploration uses multiple Cinemachine cameras with priority-based switching.
+- `GamePlayCoordinator` manages:
+  - `exploringCamera1`
+  - `exploringCamera2`
+  - `sewerCamera`
+  - `dungeonCamera`
+  - `finalBossCamera`
+- Trigger ranges such as `SewerRange`, `DungeonRange`, and `FinalRoom` raise the corresponding camera priority while the player remains in the region.
+- Exiting those regions lowers the priority again.
+
+This means camera changes are driven by zone membership rather than by individual actors.
+
+Typical exploration camera flow:
+`Player enters region trigger -> GamePlayCoordinator.OnTriggerStay2D() -> target camera priority raised -> active view changes -> OnTriggerExit2D() lowers priority`
+
+**Boss / encounter camera system**
+- Encounter cameras are packaged inside `ArenaSetUp`.
+- When an encounter is triggered, `GamePlayCoordinator.TriggerArena(...)` raises the encounter camera’s priority and activates the fight.
+- This creates a clean camera handoff from exploration to boss framing.
+- When the fight ends, `CleanUpArena(...)` lowers the arena camera priority and restores exploration flow.
+
+Typical boss camera flow:
+`Arena trigger -> TriggerArena(...) -> arena camera priority up -> boss fight active -> RaiseExitBossFight(...) -> CleanUpArena(...) -> arena camera priority down`
+
+**Camera-feedback integration**
+- `CameraShakeManager` subscribes to `OnEnterBossFight`.
+- When a boss fight starts, it updates its active Cinemachine camera reference from the incoming `ArenaSetUp`.
+- After that, combat feedback systems can apply shake to the correct active boss camera.
+
+This is a useful integration detail: the camera-feedback system does not need to know in advance which boss camera is active; it is rebound dynamically when the encounter begins.
+
+Typical feedback camera flow:
+`RaiseEnterBossFight(curArena) -> CameraShakeManager.UpdateCurCamera(...) -> combat feedback event -> ApplyCameraShake(...) on current arena camera`
+
+**Audio / ambience integration**
+- `AmbienceManager` listens to `OnSceneChanged` and changes looped ambience and one-shot environmental sounds based on the current region label.
+- `BackGroundMusicManager` listens to `OnEnterBossFight` and `OnExitBossFight` to fade between exploration and encounter music.
+- This means the camera / region system is also the bridge into environmental presentation, not just framing.
+
+Typical ambience flow:
+`currentScene changed -> RaiseSceneChanged(...) -> AmbienceManager chooses ambience loop + one-shot behavior`
+
+Typical music flow:
+`RaiseEnterBossFight(curArena) -> BackGroundMusicManager picks boss track -> fight ends -> PlayNonFightMusic(...)`
+
+**Why this subsystem matters architecturally**
+- It separates logical area changes from physical scene loads
+- It uses a lightweight priority-based camera model instead of hard camera teleports
+- It unifies cameras, arena activation, ambience, and boss music around the same trigger/event structure
+- It gives the project a stronger sense of place and progression without requiring many separate gameplay scenes
+
+This subsystem is a good example of pragmatic Unity scene-direction code: simple, local, and strongly integrated with progression and presentation.
 7. Cutscene triggering
 
 ## Known Issues
