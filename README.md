@@ -267,9 +267,91 @@ Using the formal object-oriented pattern vocabulary, the repo most clearly shows
 
 ### First-Tier: Core Components
 1. state machines
-- boss machine overview
-- user state machine overview (one example)
+The state machine layer is the main runtime decision system in the project. Each major actor owns its own local FSM, stores state objects in a dictionary keyed by an enum, and swaps behavior through a `TransitionState(...)` method. The player uses `PlayerStateInterface`, which includes input handling and fixed-update hooks, while enemies and bosses use the lighter `StateTransitionInterface` with `OnEnter()`, `OnUpdate()`, and `OnExit()`.
+
+The pattern is reused across all major actor families:
+- `Knight` manages the player FSM
+- `NewSkeleton` manages the skeleton FSM
+- `DarkWolf` manages the wolf boss FSM
+- `EvilWizard` manages phase 1 of the final boss
+- `EvilWizardPhase2` manages phase 2 of the final boss
+
+This gives the codebase a consistent interaction model: high-level intent is decided in state objects, while movement, combat, health, stamina, and animation are delegated to specialized managers.
+
+**Player state machine overview**
+- Primary states include `Idle`, `Walk`, `Run`, `Jump`, `Defend`, `Roll`, `Attack1-3`, `HeavyAttack1-2`, `RunAttack`, `JumpAttack`, `Hurt`, `Die`, and `Invulnerable`.
+- `KnightStates` reads input and runtime conditions, then decides whether to request movement, defend, spend stamina for an action, or transition to another combat state.
+- The player FSM is tightly integrated with `MovementManager`, `CombatManager`, `StaminaManager`, and `HealthManager`.
+
+Typical player interaction flow:
+`Input -> KnightStates.HandleInput() -> stamina / movement checks -> Knight.TransitionState(...) -> CombatManager or MovementManager execution -> animation -> hitbox / recovery -> return to Idle / Walk / Run`
+
+**Boss state machine overview**
+- Dark Wolf uses a compact but expressive boss FSM with `Idle`, `Walk`, `Run`, `Attack`, `Decide`, `Berserk`, `Charge`, `Vulnerable`, `Hurt`, and `Die`.
+- Evil Wizard phase 1 uses a teaching-phase FSM with `IdleMode1`, `Run`, `AttackMode1_1`, `AttackMode1_2`, `Decide`, `Vulnerable`, `Hurt`, and `DeathMode1`.
+- Evil Wizard phase 2 uses a larger escalation FSM with `Start`, `Phase2Decide`, `Walk`, `AttackWithEffect`, `AttackWithoutEffect`, `HomingLaser`, `SummonWolf`, `LaserWall`, `Phase2Vulnerable`, `Hurt`, and `Phase2Death`.
+
+Typical boss interaction flow:
+`distance / health threshold / cooldown / vulnerability state -> boss combat manager or decide state -> boss TransitionState(...) -> movement or attack coroutine -> player hit / recovery / penalty window -> next decide state`
+
+Architecturally, the important point is that the FSMs do not try to do everything themselves. They serve as orchestration layers that choose behavior, while the actual execution is handed off to combat, movement, health, audio, and feedback managers.
+
 2. Skeleton-FSM + squad-role system
+The skeleton encounter adds a second layer of interaction on top of the normal enemy FSM. Each skeleton is individually state-driven, but the group is also coordinated by a separate squad controller that assigns and reassigns combat roles over time. This is one of the strongest examples in the repo of combining local actor logic with encounter-level orchestration.
+
+**Per-skeleton FSM**
+- Each skeleton owns a local FSM through `NewSkeleton`.
+- Core states are `Defend`, `Idle`, `Walk`, `Attack`, `Sneak`, `Hurt`, `Die`, and `Trap`.
+- `Trap` is used for the tutorial-style hidden skeleton setup before the enemy fully activates.
+- `Defend` acts as the holding state for reserve units.
+- `Sneak` is the flanker-only state that maintains spacing and probes for attack timing.
+
+Typical per-unit interaction flow:
+`currentRole -> NSStates.OnUpdate() -> movement / distance / range check -> TransitionState(...) -> attack or defend behavior -> hurt / death / recovery`
+
+**Role system**
+- The squad uses three explicit roles: `Frontliner`, `Flanker`, and `Backuper`.
+- `Frontliners` are the direct pressure units. They move toward the player and cycle through normal attack states.
+- `Flanker` uses modified stats and a different behavior loop: it maintains mid-range spacing, attacks periodically, and prefers role-specific attack selection based on whether it is in front of or behind the player.
+- `Backuper` stays in a defensive holding pattern, blocks space, and only attacks opportunistically until promoted into an active combat role.
+
+**Role-driven behavior branching**
+- The same skeleton FSM behaves differently depending on `currentRole`.
+- In `NSDefendState`, role determines whether the unit remains defensive, transitions to `Idle` as a frontliner, or enters `Sneak` as a flanker.
+- In `NSAttackState`, role determines both attack selection and post-attack transition:
+  - `Backuper -> Attack -> Defend`
+  - `Frontliner -> Attack -> Idle`
+  - `Flanker -> Attack -> Sneak`
+- `NSCombatManager` also changes runtime damage based on role, making the flanker more threatening than a normal skeleton.
+
+**Squad coordination**
+- `SkeletonCoordinator` spawns the group, assigns initial targets and health-bar tracking, and then promotes specific members into the first active combat roles.
+- The initial setup is:
+  - 2 frontliners
+  - 1 flanker
+  - the rest as backupers
+- The flanker is further modified at runtime with higher speed, lower health, and higher damage to create a distinct tactical role.
+
+**Agro switch / replacement logic**
+- The squad coordinator periodically re-evaluates the active group.
+- If a frontliner dies or falls below a low-health threshold, a backup unit is promoted into the frontliner role.
+- If the flanker dies, a backup unit is promoted into the flanker role.
+- This prevents the encounter from collapsing after one or two kills and keeps pressure patterns changing during the fight.
+
+Typical squad-level interaction flow:
+`Spawn skeletons -> assign all as Backuper -> promote 2 Frontliners + 1 Flanker -> per-unit FSM behavior -> periodic health/death checks -> promote replacement units -> continue until all defeated`
+
+**Tutorial / trap interaction**
+- The tutorial skeleton uses the same underlying skeleton actor but begins in the `Trap` state.
+- `TrapDetector` monitors the player’s proximity, plays the awakening animation, then transitions the skeleton into its active state and enables the health bar.
+- This reuses the skeleton FSM while wrapping it in encounter-specific presentation logic.
+
+Architecturally, this subsystem is valuable because it is not just “enemy AI.” It shows a layered interaction model:
+- individual behavior is owned by the skeleton FSM
+- role-specific tactical behavior is owned by `NSCombatManager`
+- group composition and replacement logic is owned by `SkeletonCoordinator`
+
+That separation makes the encounter more dynamic than a standard single-enemy state machine while still keeping the logic understandable.
 3. Arena / encounter progression coordinator
 4. Combat event pipeline
 5. combat system
