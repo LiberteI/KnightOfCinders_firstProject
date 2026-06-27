@@ -735,6 +735,86 @@ Typical music flow:
 
 This subsystem is a good example of pragmatic Unity scene-direction code: simple, local, and strongly integrated with progression and presentation.
 7. Cutscene triggering
+The cutscene subsystem is responsible for moving the game into opening, victory, and defeat presentation states without mixing that logic directly into combat or progression controllers. It combines scene loading, event-driven cutscene activation, slide sequencing, typewriter text presentation, and cutscene-specific ambience control.
+
+**Two trigger models**
+- The project uses two different cutscene-entry models:
+  - **scene-driven entry** for the opening sequence
+  - **event-driven activation** for victory and defeat cutscenes
+
+**Opening cutscene flow**
+- `MainMenu.OnClickPlay()` loads `BeginningCutScene`
+- `CutSceneManager` starts from slide index `0`
+- It reveals each slide’s text with a typewriter effect
+- The player can:
+  - wait for the text to finish
+  - skip to the full line once the prompt is available
+  - advance to the next slide with input
+- When the final opening slide is completed, `CutSceneManager` loads `level1`
+
+Typical opening flow:
+`MainMenu -> SceneManager.LoadScene("BeginningCutScene") -> CutSceneManager slide loop -> final slide complete -> SceneManager.LoadScene("level1")`
+
+**Victory / defeat trigger flow**
+- Win and loss are raised from gameplay through the global event bus:
+  - `RaiseWinning()` is triggered by the final boss flow
+  - `RaiseDefeat()` is triggered by the player death flow
+- `CutSceneAwakener` subscribes to those events
+- When one fires, it enables the corresponding cutscene GameObject:
+  - `winningCutScene`
+  - `defeatCutScene`
+
+Typical result-cutscene flow:
+`Gameplay win/lose condition -> EventManager.RaiseWinning() or RaiseDefeat() -> CutSceneAwakener enables cutscene object -> CutSceneManager takes over presentation flow`
+
+**Gameplay-to-cutscene handoff**
+- `GameObjectDisabler` also listens to `OnWinning` and `OnDefeat`
+- When one of those events fires, it disables gameplay objects tagged `ShouldDisable`
+- This prevents active gameplay actors from continuing to run while the cutscene is displayed
+
+This creates a cleaner presentation handoff:
+- gameplay systems raise outcome events
+- cutscene systems activate the correct presentation object
+- cleanup helpers hide the active gameplay layer
+
+**Cutscene sequencing logic**
+- `CutSceneManager` is the main presentation controller
+- It manages:
+  - slide order
+  - current text target
+  - typewriter timing
+  - continue hints
+  - input to reveal the full line
+  - input to advance once the slide is ready
+- It also supports slides with no text by allowing immediate progression once the image is shown
+
+This keeps the cutscene logic stateful but self-contained, instead of scattering narrative progression checks through unrelated UI or gameplay scripts.
+
+**Cutscene exit / scene handoff**
+- At the end of a cutscene sequence, `CutSceneManager` branches by `usage`:
+  - `usage == 0` -> load `level1`
+  - `usage == 1` -> load `MainMenu`
+  - `usage == 2` -> load `MainMenu`
+- This lets one controller handle the opening, winning, and defeat sequences with different destinations.
+
+Typical exit flow:
+`last slide complete -> CutSceneManager checks usage -> SceneManager.LoadScene(...) -> normal game or menu flow resumes`
+
+**Ambience and audio during cutscenes**
+- `CutSceneAmbienceManager` owns cutscene-specific ambience loops and background music
+- `CutSceneManager.PlayAmbience(index)` switches cutscene ambience by slide index
+- This means the cutscene system controls not only visuals and text, but also audio progression tied to specific narrative beats
+
+Typical ambience flow:
+`StartSlide(index) -> PlayAmbience(index) -> CutSceneAmbienceManager fades clip in/out -> cutscene atmosphere updates with slide progression`
+
+**Why this subsystem matters architecturally**
+- It separates outcome presentation from gameplay resolution
+- It uses the same global event system as the rest of the project, so cutscenes are triggered cleanly by gameplay state
+- It keeps opening/win/lose narrative flow inside a dedicated controller instead of mixing it into menu or combat code
+- It provides a reusable presentation pattern: activate cutscene object, disable gameplay objects, run slide logic, hand off to next scene
+
+This subsystem is a strong example of presentation orchestration: lightweight, event-aware, and clearly separated from core combat and progression logic.
 
 ## Known Issues
 Context: this is the first project. I was not very proficient with git workflow. the comprehensive project was deleted by accident. The code and structure on github is the only remaining stuff.
