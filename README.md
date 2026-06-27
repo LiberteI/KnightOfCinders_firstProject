@@ -439,6 +439,111 @@ Typical exploration flow:
 
 This subsystem is a good example of practical orchestration code in a game project. It is not a generic framework, but it does establish a consistent progression pipeline across multiple encounters.
 4. Combat event pipeline
+The combat event pipeline is the project’s central runtime interaction path for attacks landing, damage being resolved, and audiovisual feedback reacting to the result. It is one of the clearest examples of how the codebase combines direct component access with event-driven fan-out.
+
+**Core idea**
+- A hitbox collision does not directly update every downstream system.
+- Instead, collision is translated into a structured combat payload (`HitData`), then broadcast through `EventManager`.
+- Combat logic, UI, audio, and feedback systems subscribe to that event and react from their own responsibility boundaries.
+
+**Hit payload structure**
+- `HitData` is the main combat-transfer object.
+- It carries:
+  - `initiator`
+  - `targetHurtBox`
+  - `damage`
+  - `knockBackDir`
+  - `feedbackData`
+- `FeedbackData` is embedded inside `HitData` and carries hit stop and camera shake parameters.
+
+This means one collision event can transport both gameplay consequences and feel/presentation data in the same packet.
+
+**Pipeline entry point: hit detection**
+- `HitBoxManager.OnTriggerEnter2D()` is the main entry point.
+- It distinguishes between:
+  - enemy hitboxes colliding with player hurtboxes
+  - player hitboxes colliding with enemy hurtboxes
+- It then:
+  - finds the runtime damage source
+  - builds a `HitData` object
+  - calculates knockback direction from relative positions
+  - copies combat feedback settings into `feedbackData`
+  - validates whether the hit should occur
+  - broadcasts `EventManager.RaiseHitOccured(data)`
+
+Typical entry flow:
+`Attack animation -> active collider -> HitBoxManager -> build HitData -> RaiseHitOccured(data)`
+
+**Primary gameplay listeners**
+- `CombatManager` listens for hit events affecting the player.
+- Enemy combat managers such as `NSCombatManager`, `DWCombatManager`, `EW1CombatManager`, and `EW2CombatManager` listen for hit events affecting their own hurt boxes.
+- These listeners decide:
+  - whether the hit is valid for this actor
+  - whether the actor is invincible or shielded
+  - whether defending changes the result
+  - whether to take damage, transition to hurt, or ignore the hit
+
+For the player specifically:
+- `CombatManager.GetHit(...)` checks invulnerability and defend state
+- block direction and stamina can reduce or negate damage
+- failed defense can halve damage and force a hurt transition
+- accepted hits transition the knight into `Hurt` and call `OnGetHit(data)` on the current state
+
+For enemies specifically:
+- each enemy combat manager filters by its own hurt box
+- enemy-specific rules then apply:
+  - skeleton super-armor / hurt-count logic
+  - wolf vulnerability and charge-state logic
+  - wizard casting, heavy attack, summon, and phase rules
+
+**Damage resolution**
+- Once a hit is accepted, the target’s health manager receives the damage value:
+  - player side through `HealthManager.TakeDamage(...)`
+  - enemy side through `EnemyHealthManager.TakeDamage(...)`
+- Health changes are then broadcast again through `EventManager` so presentation and death logic can react independently.
+
+Typical damage resolution flow:
+`HitData accepted -> target combat manager resolves block / invulnerability / modifiers -> HealthManager.TakeDamage(...) -> health event broadcast`
+
+**Feedback fan-out**
+- `CombatFeedbackManager` listens to `OnHitOccured` and applies:
+  - hit stop
+  - camera shake
+- `AudioFeedbackManager` also listens to the same event and chooses impact audio based on:
+  - who initiated the hit
+  - which hurt box was struck
+  - special runtime states such as wolf charging or wizard attack mode
+
+This is a strong interaction design point: the same combat event drives both gameplay and game-feel without requiring the attacker or defender scripts to manually call every feedback system.
+
+**UI fan-out**
+- The hit event itself does not update the UI directly.
+- Instead, damage changes health.
+- Health managers then broadcast updated values.
+- `UIManager` subscribes to those health and stamina events and updates:
+  - player health bar
+  - enemy health bars
+  - stamina bar
+  - death cleanup for tracked health bars
+
+This gives the combat pipeline a layered structure:
+`collision -> hit event -> combat resolution -> health/stamina event -> UI update`
+
+**Why this pipeline matters architecturally**
+- It separates collision detection from combat resolution
+- It lets multiple systems react to one combat event without tight direct coupling
+- It centralizes hit payload construction in one place
+- It keeps feedback and UI as subscribers rather than embedding them into every attack coroutine
+- It still allows actor-specific combat rules through per-enemy combat managers
+
+**Typical end-to-end combat pipeline**
+`Attack State / Animation -> HitBoxManager -> HitData -> EventManager.OnHitOccured -> CombatManager / EnemyCombatManager -> HealthManager / EnemyHealthManager -> health events -> UIManager + death logic`
+
+**Typical end-to-end feedback pipeline**
+`HitData.feedbackData -> CombatFeedbackManager -> HitStopManager + CameraShakeManager`
+
+**Typical end-to-end audio pipeline**
+`HitData -> AudioFeedbackManager -> choose clip by initiator / target / attack context -> play impact sound`
 5. combat system
 - health
 - stamina
