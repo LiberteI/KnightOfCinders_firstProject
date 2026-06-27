@@ -76,9 +76,100 @@ The codebase separates responsibilities reasonably well at the gameplay-feature 
 At a higher level, the repo shows a real attempt at separating gameplay domains into movement, combat, resources, AI, UI, feedback, audio, and encounter coordination. The boundary quality is strongest at the feature/component level. The main limitation is that these systems still depend heavily on serialized references, shared runtime objects, and direct component access, so the architecture is modular in practice but not deeply abstracted.
 
 ### 4. Data Flow Diagram
-A simple box-and-arrow diagram:
+Before drawing the box-and-arrow diagram, it helps to identify the main kinds of data that move through the game:
 
-- Example: `Input -> Player FSM -> Stamina Check -> Animation -> Hitbox -> Enemy FSM -> Health/UI`
+- **Player input data**
+  Keyboard input such as movement, sprint, jump, attack, defend, roll, and quit commands. This data is read primarily by the player state layer and movement systems.
+
+- **State transition data**
+  Enum-based state identifiers such as `KnightStateTypes`, `NSStateType`, `DarkWolfStateType`, `EvilWizardStateTypes`, and `Phase2StatesTypes`. These values drive actor behavior changes inside the FSM controllers.
+
+- **Combat hit payloads**
+  `HitData` is the core combat-transfer object. It carries the attack initiator, target hurt box, runtime damage, knockback direction, and attached feedback data.
+
+- **Combat feedback payloads**
+  `FeedbackData` carries hit stop and camera shake parameters such as stop time, amplitude, frequency, and duration. This is attached to hit events and consumed by feedback systems.
+
+- **Health values**
+  Current health, maximum health, dead/alive state, and damage/healing updates for both player and enemies. These values are broadcast to UI and used by combat and death logic.
+
+- **Stamina values**
+  Current stamina, maximum stamina, depletion state, regeneration timing, and stamina-cost deductions for actions such as running, heavy attacks, shield strike, blocking, and rolling.
+
+- **Damage values**
+  Runtime attack damage, damage multipliers, boss vulnerability bonuses, attack-specific damage constants, and knockback decisions. These values are computed by combat managers and passed into hit resolution.
+
+- **Enemy role data**
+  Skeleton squad role assignments such as `Frontliner`, `Flanker`, and `Backuper`. This data affects movement style, attack selection, and promotion/replacement logic in the squad encounter.
+
+- **Boss phase and status data**
+  Health thresholds, current mode, vulnerability flags, cooldown timers, summon state, and penalty windows for Dark Wolf and Evil Wizard encounters.
+
+- **Encounter setup data**
+  `ArenaSetUp` carries the current barriers, boss object, and arena camera for each encounter. It is used by progression and boss-fight lifecycle logic.
+
+- **Scene and environment data**
+  Scene labels such as `outside`, `sewer`, `dungeon`, `finalRoom`, and `rainScene`, plus trigger tags and environmental toggles like rain/bounds. These values drive ambience and camera behavior.
+
+- **Camera priority data**
+  Cinemachine camera priority values that determine which exploration or boss camera is active at a given time.
+
+- **Event payloads**
+  Global event-bus messages for health changes, stamina changes, hit events, enemy death, boss-fight entry/exit, scene changes, victory, and defeat.
+
+- **Animation and timing data**
+  Animation state names, normalized time checks, coroutine timers, cooldowns, and invulnerability windows. These values drive sequencing and state exit conditions.
+
+- **UI presentation data**
+  Health-bar ratios, stamina-bar ratios, tracked entities, and delayed bar animation targets used by the HUD and enemy health bars.
+
+#### Data-Specific Flow Sketches
+
+- **Player input data**  
+  `Keyboard Input -> KnightStates.HandleInput() -> Knight.TransitionState(...) -> MovementManager / CombatManager -> Animator / Rigidbody2D`
+
+- **State transition data**  
+  `Runtime Condition / Input / AI Decision -> State Enum Value -> Actor TransitionState(...) -> Current State Swap -> OnEnter() / OnUpdate() / OnExit()`
+
+- **Combat hit payloads (`HitData`)**  
+  `Attack Animation / Active Hitbox -> HitBoxManager.OnTriggerEnter2D() -> Build HitData -> EventManager.RaiseHitOccured(data) -> Combat / Health / Feedback listeners`
+
+- **Combat feedback payloads (`FeedbackData`)**  
+  `CombatManager / EnemyCombatManager.sourceFeedback -> HitBoxManager.AssignFeedbackData() -> HitData.feedbackData -> CombatFeedbackManager / AudioFeedbackManager`
+
+- **Health values**  
+  `Incoming Damage / Passive Heal -> HealthManager or EnemyHealthManager -> curHealth / maxHealth update -> EventManager health broadcast -> UIManager / death logic / state transitions`
+
+- **Stamina values**  
+  `Action Request / Regen Tick -> StaminaManager.DeductStamina() or RegenerateStamina() -> curStamina update -> EventManager.KnightStaminaChanged() -> UIManager`
+
+- **Damage values**  
+  `Current Attack State / Boss Vulnerability / Multiplier -> CombatManager or EnemyCombatManager.damage -> HitData.damage -> Target HealthManager.TakeDamage()`
+
+- **Enemy role data**  
+  `SkeletonCoordinator.AssignRole() / TrackCurSkeletonSquat() -> currentRole (Frontliner / Flanker / Backuper) -> NSStates / NSCombatManager behavior branch -> movement and attack style`
+
+- **Boss phase and status data**  
+  `Boss Health / Cooldowns / Vulnerability Flags -> DWCombatManager or EW1/EW2CombatManager -> boss FSM TransitionState(...) -> phase-specific attacks / penalties / summons`
+
+- **Encounter setup data (`ArenaSetUp`)**  
+  `Trigger Collider -> GamePlayCoordinator.TriggerArena(...) -> ArenaSetUp (camera + barriers + boss) -> RaiseEnterBossFight() -> fight lifecycle / cleanup`
+
+- **Scene and environment data**  
+  `Scene Trigger / OverlapCircle() -> GamePlayCoordinator.DetermineScene() -> currentScene string -> EventManager.RaiseSceneChanged() -> AmbienceManager / environment toggles`
+
+- **Camera priority data**  
+  `Arena Trigger / Region Trigger -> GamePlayCoordinator -> CinemachineCamera.Priority update -> active camera changes for exploration or boss fight`
+
+- **Event payloads**  
+  `System State Change -> EventManager.Raise...() -> subscribed listeners (UI / combat / ambience / cutscene / coordinator) -> secondary reactions`
+
+- **Animation and timing data**  
+  `State Enter / Coroutine Start -> Animator.Play() / timer values / cooldown counters -> normalizedTime / timer checks -> next transition or effect window`
+
+- **UI presentation data**  
+  `Health / Stamina event -> UIManager.UpdateHealthBar() / UpdateStaminaBar() -> bar ratios and delayed animation -> player HUD / enemy health bars`
+
 
 ### 5. Folder / Namespace Structure
 The project is organized primarily by gameplay domain and Unity feature area rather than by formal C# namespaces. Most scripts live in the global namespace and are grouped physically by folder. In practice, the folder structure carries the architectural meaning that namespaces would often carry in a larger C# codebase.
