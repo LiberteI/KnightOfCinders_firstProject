@@ -75,16 +75,12 @@ The codebase separates responsibilities reasonably well at the gameplay-feature 
 
 At a higher level, the repo shows a real attempt at separating gameplay domains into movement, combat, resources, AI, UI, feedback, audio, and encounter coordination. The boundary quality is strongest at the feature/component level. The main limitation is that these systems still depend heavily on serialized references, shared runtime objects, and direct component access, so the architecture is modular in practice but not deeply abstracted.
 
-### 4. Communication Pattern Between Systems
-- do systems talk via direct references, UnityEvents, a custom event bus, or polling? 
-- E.g., does the Stamina system fire an event the UI listens to, or does the UI poll it every frame? Same question for combat hits → state machine.
-
-### 5. Data Flow Diagram
+### 4. Data Flow Diagram
 A simple box-and-arrow diagram:
 
 - Example: `Input -> Player FSM -> Stamina Check -> Animation -> Hitbox -> Enemy FSM -> Health/UI`
 
-### 6. Folder / Namespace Structure
+### 5. Folder / Namespace Structure
 The project is organized primarily by gameplay domain and Unity feature area rather than by formal C# namespaces. Most scripts live in the global namespace and are grouped physically by folder. In practice, the folder structure carries the architectural meaning that namespaces would often carry in a larger C# codebase.
 
 #### Project Folder Structure
