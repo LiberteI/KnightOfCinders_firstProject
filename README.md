@@ -545,10 +545,107 @@ This gives the combat pipeline a layered structure:
 **Typical end-to-end audio pipeline**
 `HitData -> AudioFeedbackManager -> choose clip by initiator / target / attack context -> play impact sound`
 5. combat system
-- health
-- stamina
-- audio
-- animation
+The combat system is the gameplay rule layer that sits underneath the state machines and event pipeline. It defines what actions cost, how attacks are sequenced, how damage is calculated, when the player can be interrupted, and how recovery, invulnerability, and presentation feedback are synchronized.
+
+At a high level, combat is split across several collaborating systems rather than one large script:
+- `CombatManager` owns attack execution, combo logic, runtime damage, defend rules, and hurt/death response
+- `StaminaManager` owns action costs, regeneration, depletion penalties, and stamina availability
+- `HealthManager` owns damage intake, healing, death detection, and health broadcasts
+- `MovementManager` enforces movement constraints during combat states such as attack, roll, defend, and hurt
+- audio and feedback managers handle the presentation layer after combat outcomes are known
+
+**Attack and combo layer**
+- The player combat system supports:
+  - 3 light combo attacks
+  - 2 heavy combo attacks
+  - run attack
+  - jump attack
+  - shield strike
+  - defend / block
+- `CombatManager` tracks the current light and heavy combo step using combo timers and attack-step flags.
+- This allows the player FSM to branch to the correct next attack state based on both input and the current combo window.
+- Runtime damage is also derived from the active attack state rather than being fixed globally.
+
+Typical attack flow:
+`Player state transition -> CombatManager coroutine -> set attack flags + runtime damage + feedback values -> play animation -> active hitbox -> event pipeline -> clear attack flags`
+
+**Health subsystem**
+- `HealthManager` owns the player’s current and maximum health.
+- It is responsible for:
+  - taking damage
+  - passive healing
+  - healing delay after damage
+  - death detection
+  - health event broadcasting
+- The player health model includes regeneration, which is unusual for a strict Souls-like, but in this project it is tied to pacing and recovery states.
+- Healing is delayed when the player has recently taken damage, which prevents instant recovery loops during active combat.
+
+Typical health flow:
+`Accepted hit -> HealthManager.TakeDamage(...) -> curHealth update -> health broadcast -> UI update -> if curHealth <= 0 -> RaiseKnightDied()`
+
+**Stamina subsystem**
+- `StaminaManager` is the global action budget for combat and mobility.
+- It gates:
+  - heavy attacks
+  - run
+  - run attack
+  - roll
+  - shield strike
+  - blocked attacks
+  - jump attack
+- Stamina regenerates continuously, but regeneration speed changes by player state.
+- Idle and walk states add recovery bonuses.
+- If stamina is fully depleted, regeneration is delayed by a depletion timer.
+- This means stamina is not only a cost system but also a pacing system.
+
+Typical stamina flow:
+`Action request -> StaminaManager.DeductStamina(...) -> allow or deny transition -> curStamina update -> stamina broadcast -> UI update`
+
+**Defend, roll, and interruption rules**
+- Blocking is directional and stamina-dependent.
+- If the player is defending from the front and has enough stamina, damage is negated and converted into knockback plus stamina loss.
+- If the player is defending but lacks stamina, the defense breaks and some damage still goes through.
+- If the player is hit from behind while defending, the block is bypassed.
+- Rolling provides full invulnerability for the dodge window and is checked through movement/combat state.
+- Attacks are generally interruptible unless a specific action or enemy state grants super armor or invulnerability.
+
+This gives combat a clear risk/reward structure:
+- attacking commits the player
+- defending is safer but stamina-limited
+- rolling avoids damage but has a meaningful stamina cost
+
+**Movement-combat integration**
+- `MovementManager` is not just locomotion; it also enforces combat restrictions.
+- It disables or constrains movement when the player is:
+  - attacking
+  - defending
+  - rolling
+  - hurt
+  - dead
+- Roll movement is executed as a combat-linked movement coroutine.
+- Jumping and running are also coordinated with combat state and stamina availability.
+
+This matters because combat responsiveness depends on movement rules being synchronized with attack and defense state, not treated as an unrelated subsystem.
+
+**Audio and presentation integration**
+- Combat audio is layered:
+  - `PlayerSoundManager` handles player character sounds such as jump audio
+  - `AudioFeedbackManager` handles impact and weapon-contact sounds based on combat events
+- Animation and feedback are also tightly coupled to combat:
+  - attack coroutines wait on animation completion
+  - different attacks assign different hit stop and camera shake values
+  - combat outcomes feed directly into impact sound, camera shake, and UI health feedback
+
+Typical presentation flow:
+`CombatManager / EnemyCombatManager -> animation + feedback settings -> hit event -> audio / camera shake / hit stop / UI response`
+
+**Why this combat system is a strong design point**
+- It separates combat into rule-specific subsystems instead of one all-in-one controller
+- It ties combat cost, survivability, and movement together through stamina and state gating
+- It supports different forms of commitment: combo attacks, heavy attacks, roll invulnerability, directional blocking, and shield strike utility
+- It integrates game-feel systems without burying all presentation logic inside attack code
+
+Overall, the combat system is one of the strongest areas of the project because it combines state-driven control, resource management, animation timing, and event-based feedback into a coherent gameplay loop.
 
 ### Secondary: For a Complete Game
 6. Scene switching, camera system
