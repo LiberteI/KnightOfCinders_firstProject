@@ -1,52 +1,55 @@
-# Knight of Cinders
+Architect overview
+1. high-level architecture style:
+This project uses a pragmatic Unity gameplay architecture built from `MonoBehaviour` components. Runtime actors such as the player, skeletons, Dark Wolf, and Evil Wizard are composed from focused managers for movement, combat, health, stamina, UI, audio, and feedback rather than a single monolithic controller. On top of that component model, the core gameplay loop is state-driven: each major actor owns an explicit finite state machine that controls behavior transitions such as idle, movement, attack, hurt, death, and boss-specific phases. Cross-system coordination is handled through a lightweight event-driven layer (`EventManager`) for health, stamina, hits, scene changes, and boss-fight lifecycle events, while scene-level flow is orchestrated by coordinator-style scripts such as `GamePlayCoordinator` and `SkeletonCoordinator`. In short, the codebase is best described as a component-based Unity architecture centered on explicit FSMs, event broadcasting, and manager-style orchestration.
+2. Core architectural pattern: the FSM framework
+- Base State class/interface (what methods does it expose — Enter(), Update(), Exit()?)
+- How states are owned/switched (a StateMachine component per character, or one centralized manager?)
+- Is it the same FSM base class reused for Player, Skeletons, Dark Wolf, and Evil Wizard, or separate implementations?
+3. system boundaries / responsibilities
+eg: PlayerController: (input -> state requests)
+4. communication pattern between systems: 
+- do systems talk via direct references, UnityEvents, a custom event bus, or polling? 
+- E.g., does the Stamina system fire an event the UI listens to, or does the UI poll it every frame? Same question for combat hits → state machine.
+5. Data flow diagram: a simple box-and-arrow diagram:
+eg: Input → Player FSM → Stamina Check → Animation → Hitbox → Enemy FSM → Health/UI. 
+6. Folder/namespace structure
 
-🎮 **A 2D Souls-like melee combat game** built in Unity.  
-Play as a noble knight fighting to reclaim the kingdom from an evil wizard and his dark army.
-
-## ✨ Features
-- 4 unique bosses (Dark Wolf, Skeleton Army, Evil Wizard Phase 1, Evil Wizard Phase 2)
-  
-- For a detailed breakdown of bosses, abilities, and design features, see [Full Feature List](BOSS_FEATURE.md).
-
-- Versatile player with dynamic movements and combat options
-- For a detailed breakdown of player design features, see [Player feature](PLAYER_FEATURE.md).
-- Finite State Machine AI for dynamic enemy behavior
-- Polished melee combat system, providing a fun yet challenging experience
-- Polished combat feedback system (hit effects, synchronized sound effects)
-- Parallax backgrounds & atmospheric and beautiful level design
-- Polished weather system (particle system with detailed effects)
-- Beautiful storytelling animations with dynamic ambience.
-- Smooth camera system
-- Interactive polished UI system
-
-## 🎥 Trailer
-[![Watch the trailer](https://img.youtube.com/vi/DgtHopB85VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=DgtHopB85VI)
-
-## ▶️ Demo
-- [Download the latest build (Google Drive)](https://drive.google.com/file/d/1QigchoK-Ckn5wDokIMy8jG526GJFgCHP/view?usp=sharing)
-- Controls:  
-  - **WASD** → Move  
-  - **J** → Light Attack  
-  - **U** → Power Attack  
-  - **K** → Jump  
-  - **L** → Roll  
-  - **H** → Shield Strike  
-  - **Left Shift** → Sprint  
-  - **Esc** → Quit
-
-## ⚙️ Tech Stack
-- Unity (C#) for core gameplay systems and mechanics
-- Unity Particle System for dynamic weather and visual effects
-- 2D Animation & sprite-based design
-- Extendable Finite State Machines for enemy AI and player state management
-- Pixel-art asset integration and level design
-- Audio design and feedback using Unity’s Audio Manager
-- Clean, maintainable code following SOLID principles and object-oriented design
+Project folder structure
 
 
-## 👤 Author
-**Yiming Yang**  
-- Indie Game Developer & Software Engineer  
-- Pianist | BSc Computer Science + Music Minor
-- Passionate about creating smart, playable, and meaningful game experiences.
-- [LinkedIn Profile](https://www.linkedin.com/in/yiming-yang-89a0102a0/?trk=public-profile-join-page)
+Key scripts/classes
+
+
+Design pattern used
+1. singleton
+2. event-driven
+
+
+System interations 
+first-tier: core components
+1. state machines
+- boss machine overview
+- user state machine overview (one example)
+2. Skeleton-FSM + squad-role system
+3. Arena / encounter progression coordinator
+4. Combat event pipeline
+5. combat system
+- health
+- stamina
+- audio
+- animation
+secondary: for a complete game
+6. Scene switching, camera system
+7. Cutscene triggering
+
+Known Issues:
+Context: this is the first project. I was not very proficient with git workflow. the comprehensive project was deleted by accident. The code and structure on github is the only remaining stuff.
+1. only source code, scenes and level exist making it hard to reproduce local development environment. Luckily, a Mac executable survived.
+2. no automated approach
+3. this is not a fully decoupled architecture. Many systems still depend on serialized references and direct component access, so I would avoid overselling it as “clean architecture.”
+
+Testing approach
+1. manual playtesting only
+
+credit:
+I spent 2025 6-8 2 months to complete this game. coding 10 hours everyday. so ~600h effort for this game.
