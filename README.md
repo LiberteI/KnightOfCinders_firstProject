@@ -817,14 +817,19 @@ Typical ambience flow:
 This subsystem is a strong example of presentation orchestration: lightweight, event-aware, and clearly separated from core combat and progression logic.
 
 ## Known Issues
-Context: this is the first project. I was not very proficient with git workflow. the comprehensive project was deleted by accident. The code and structure on github is the only remaining stuff.
+This was my first complete game project, and part of the original project history and environment setup was lost after an accidental deletion. The current repository still preserves the core gameplay code, scenes, and overall architecture, but there are a few important limitations:
 
-1. only source code, scenes and level exist making it hard to reproduce local development environment. Luckily, a Mac executable survived.
-2. no automated approach
-3. this is not a fully decoupled architecture. Many systems still depend on serialized references and direct component access, so I would avoid overselling it as “clean architecture.”
+1. The repository is not fully reproducible as a clean development environment. It preserves the gameplay source code and main scenes, but some original project context and setup metadata are no longer available.
+2. Testing is manual only. There are no automated gameplay, integration, or regression tests in the current project.
+3. The architecture is modular by gameplay feature, but not deeply decoupled. Many systems still rely on serialized references, shared runtime objects, and direct component access rather than strict interface boundaries.
+4. Some in-level camera transitions are rough, especially around the dungeon-to-exploration handoff. The tunnel exit framing was not tuned cleanly enough, so the camera transition can feel abrupt instead of smooth.
 
 ## Testing Approach
-1. manual playtesting only
+Testing for this project was entirely manual.
+
+1. Core gameplay systems were validated through repeated playtesting, including player movement, combat flow, stamina management, boss encounters, and encounter progression.
+2. Visual and presentation systems were also checked in play, including camera transitions, UI updates, audio feedback, ambience switching, and cutscene flow.
+3. The project does not include automated unit, integration, or regression tests, so stability and balancing were evaluated through hands-on iteration inside the game.
 
 ## Credit
-I spent 2025 6-8 2 months to complete this game. coding 10 hours everyday. so ~600h effort for this game.
+This project was built as a solo effort over roughly two months, from June to August 2025. I treated it as an intensive full-time project and estimate the total effort at roughly 600 hours across gameplay programming, encounter design, combat iteration, presentation systems, and overall integration.
