@@ -123,3 +123,5 @@ Shows combat resolution handing off cleanly into cutscene presentation through g
 - Testing is manual only; there are no automated gameplay or regression tests.
 - Some systems are modular by responsibility but still rely heavily on serialized references and direct component access.
 - A few in-level camera transitions still need tuning, especially around dungeon/exploration handoff.
+- Stair and step traversal is still rough, with some climbs requiring repeated jumps and producing blocky movement.
+- Difficulty tuning is intentionally demanding, and some encounters may read as overtuned for broader players.
