@@ -16,6 +16,14 @@ What became easier after that:
 
 The downsides are mostly scale and maintenance. As the action set grows, the number of state classes grows with it. That is manageable in this project, but if it expanded further I would likely introduce more hierarchy or shared abstractions for related movement/combat states instead of keeping every state entirely flat.
 
+### Why not Animator transitions?
+
+Animator transitions were useful for visual playback, but I did not want the Animator to become the main source of gameplay truth. Combat windows, stamina checks, hurt rules, roll invulnerability, and death transitions all needed explicit C# control. In this project, animation is driven by state changes, not the other way around. That kept runtime rules readable in code, reduced the risk of gameplay logic being buried inside Animator graphs, and avoided turning the Animator into a large web of transition conditions and booleans that would have been harder to debug than direct code.
+
+### Why not behavior trees?
+
+Behavior trees would have been useful for broader AI decision-making, especially in a larger game with more branching enemy logic. For this project, though, most actors follow relatively clear action states and phase transitions: idle, move, attack, hurt, die, and boss-specific modes like vulnerable or laser wall. FSMs were simpler to implement, easier to debug, and a better fit for the scope and pacing of these encounters.
+
 ## 2. Why use manager components instead of one large controller?
 
 I separated responsibilities into focused manager components because combat, movement, stamina, health, feedback, UI, and progression all change for different reasons. On the player side, `MovementManager`, `CombatManager`, `StaminaManager`, and `HealthManager` each own a distinct slice of runtime behavior. On the enemy side, the same pattern appears again through base capability layers like `EnemyMovementManager`, `EnemyCombatManager`, and `EnemyHealthManager`, plus specialized managers for bosses and encounters.
@@ -31,6 +39,14 @@ The strongest manager boundaries in practice were:
 
 The weakest boundaries are around player combat and movement, where responsiveness required a lot of cross-checking between stamina, movement, combat flags, animator state, and hurt/death conditions.
 
+### Why isn't health inside `Knight`?
+
+Health was separated because it changes for different reasons than movement or combat. `Knight` should own actor identity and state transitions, while `HealthManager` owns damage intake, passive healing, death checks, and health event broadcasts. That separation made it easier to connect health changes to UI and defeat flow without turning the actor root into a catch-all script.
+
+### Why isn't movement inside `Knight`?
+
+Movement has its own rules for velocity, jumping, rolling, gravity, facing direction, swimming, and motion locks. Keeping that inside `Knight` would have made the actor root too large and too responsible for low-level physics behavior. `Knight` works better as the FSM owner and high-level state root, while `MovementManager` executes the locomotion rules that those states allow.
+
 ## 3. Why use an EventManager?
 
 Several systems needed to react to the same gameplay event without being tightly coupled to each other. A hit should affect combat resolution, health, camera shake, audio feedback, and UI. A boss-fight transition should affect barriers, cameras, ambience, music, and fight cleanup. A win or defeat event should affect cutscenes and presentation flow. That is exactly what `script/EventManager.cs` is doing.
@@ -45,6 +61,23 @@ Direct references still remain necessary in several places:
 - actor-specific manager calls where one subsystem genuinely owns another runtime rule
 
 So the project is not “everything through events.” The event layer helps for cross-system reactions, while direct references still handle local actor behavior.
+
+### Why use an `EventManager` instead of direct references everywhere?
+
+A single hit needs multiple systems to react at once. If I used only direct references, combat code would need to know about health, UI, audio, camera shake, hit stop, and sometimes progression or cutscene consequences. Events let the hit source broadcast once and let each downstream system react independently. That is the main reason this project uses both direct actor references and a shared event layer instead of trying to force everything through one approach.
+
+### Can I explain the event flow with one concrete gameplay example?
+
+Yes. A sword hit on a skeleton is the clearest example:
+- the attack collider reaches the target in `HitBoxManager.OnTriggerEnter2D()`
+- `HitBoxManager` creates `HitData`, including runtime damage, knockback direction, and feedback payload
+- `EventManager.RaiseHitOccured(data)` broadcasts the hit
+- an enemy combat or health layer reacts and reduces health
+- `CombatFeedbackManager` reacts with hit stop and camera shake
+- `AudioFeedbackManager` reacts with impact audio
+- UI reacts later through the health event broadcast from the health manager
+
+That flow is a good example of why events were useful here: one gameplay moment fans out into multiple presentation and rule systems without making the hit source call every one directly.
 
 ## 4. Why create SkeletonCoordinator instead of making each skeleton independent?
 
@@ -127,3 +160,13 @@ I would also add automated tests where the rules are most brittle:
 - encounter completion and cleanup conditions
 
 The main architectural lesson from this project was that explicit structure matters most when gameplay complexity starts compounding. FSMs, separated managers, and event-driven reactions all helped keep the project understandable. At the same time, the project also taught me where “modular” is not the same as “loosely coupled,” and where the next step would be stronger interfaces, cleaner shared abstractions, and better test coverage.
+
+### How did the architecture evolve over time?
+
+The architecture did not start fully structured. It moved in stages as the game became harder to reason about:
+- larger actor logic first, where behavior and presentation were more mixed together
+- manager separation next, once movement, combat, stamina, health, and UI started changing for different reasons
+- explicit FSMs after that, once animation and action-state bugs made actor behavior too hard to control in one place
+- events and coordinators later, once combat feedback, boss-fight flow, ambience, UI, and cutscene handoff became cross-system problems
+
+That evolution is why the codebase has both strong structure and some remaining coupling. The current architecture reflects iterative problem-solving rather than a perfectly designed framework built upfront.
