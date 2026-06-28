@@ -6,15 +6,21 @@ This document records the major design decisions behind Knight of Cinders. It is
 
 Questions to answer:
 - What problems did FSMs solve for player and enemy behavior?
+1. It provides a more reusable, more extenable system for new actions. it also provides explicite control for behaviors like animations, audio synchronization, and feedback. 
 - Why was this better than putting all behavior in one controller?
+1. Before FSM, There was a script called User controller. It produced weird bugs like animation blending.
 - What became easier after each actor owned explicit states?
+1. all animations and states own their own segragated state, preventing mixture.
 - What were the downsides?
+1. when there are more and more states as player's actions become more complex, we might need to introduce new architectures like child states, parent states to group similar states. So for example: idle-move or related states can integrate into a big block and expose a centred state to transition to states built for other concerns like attack etc.
 
 ## 2. Why use manager components instead of one large controller?
 
 Questions to answer:
 - Which responsibilities were separated?
+1. UI logic, Health, combat, movement, etc
 - How did this help debugging or iteration?
+1. i remembet
 - Where did this approach still create coupling?
 - Which manager boundaries worked best in practice?
 

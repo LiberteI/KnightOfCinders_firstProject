@@ -147,15 +147,10 @@ flowchart LR
 
 ## Design Patterns
 Formal patterns clearly present:
-- Observer: `EventManager` + subscribers
-- Strategy-like behavior objects: interchangeable FSM states
-
-Partial or weaker matches:
-- Singleton-like global access through static classes
-
-Not a strict fit:
-- full MVC
-- factory-heavy architecture
+- Observer: `EventManager` publishes gameplay events, and multiple systems subscribe without direct coupling. Examples include `UIManager`, `CombatFeedbackManager`, `AudioFeedbackManager`, `AmbienceManager`, `BackGroundMusicManager`, and `GamePlayCoordinator` reacting to `OnHitOccured`, health, scene, and boss-fight events.
+- Strategy-like behavior objects: actor behavior is split into interchangeable state objects behind shared interfaces. `Knight` stores `PlayerStateInterface` implementations in a state dictionary, while enemies and bosses do the same through `StateTransitionInterface` in classes like `NewSkeleton`, `DarkWolf`, `EvilWizard`, and `EvilWizardPhase2`.
+- Facade-like manager layer: actor roots and states delegate subsystem work through narrower manager APIs instead of owning every rule directly. Typical calls include `movementManager`, `combatManager`, `healthManager`, and `staminaManager` operations from `KnightStates`, plus shared enemy movement/combat helpers used across skeletons, Dark Wolf, and Evil Wizard.
+- Singleton-like global access through static classes: `EventManager` acts as a global event hub via static events and static raise methods, making it accessible across combat, UI, audio, cutscene, and progression systems without instance lookup.
 
 ## Employer-Relevant Takeaway
 The architecture shows evidence of:
