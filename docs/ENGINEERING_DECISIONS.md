@@ -163,10 +163,8 @@ The main architectural lesson from this project was that explicit structure matt
 
 ### How did the architecture evolve over time?
 
-The architecture did not start fully structured. It moved in stages as the game became harder to reason about:
-- larger actor logic first, where behavior and presentation were more mixed together
-- manager separation next, once movement, combat, stamina, health, and UI started changing for different reasons
-- explicit FSMs after that, once animation and action-state bugs made actor behavior too hard to control in one place
-- events and coordinators later, once combat feedback, boss-fight flow, ambience, UI, and cutscene handoff became cross-system problems
+This project began in February 2026 as a much simpler platformer prototype built around basic jumping and movement. Most of the real gameplay and architecture work happened during the summer, from June through August 2026, when the project expanded from a small prototype into a combat-focused action game.
 
-That evolution is why the codebase has both strong structure and some remaining coupling. The current architecture reflects iterative problem-solving rather than a perfectly designed framework built upfront.
+The implementation order shaped the architecture. I started with the player first, because movement, combat flow, and state control defined the rest of the game. After that foundation was working, I built the bosses and encounter logic on top of it. Once the core gameplay loop was stable, I added the surrounding presentation and support layers: UI, combat feedback, animation polish, ambience, cameras, and background presentation systems.
+
+That sequence is why the architecture feels layered. The early work established the actor and combat foundations first, while later work introduced the event-driven feedback, encounter orchestration, and presentation systems needed to make the game feel complete.
