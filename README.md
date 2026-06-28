@@ -5,6 +5,7 @@ A solo-built 2D Unity action game focused on melee combat, boss phases, and fini
 ## Play / Watch
 - 🎮 **Play Demo:** [Google Drive download](https://drive.google.com/file/d/1QigchoK-Ckn5wDokIMy8jG526GJFgCHP/view?usp=sharing)
 - ▶️ **Watch Trailer:** [YouTube trailer](https://www.youtube.com/watch?v=DgtHopB85VI)
+- 🎥 **Watch Full Gameplay:** [YouTube full gameplay](https://www.youtube.com/watch?v=TSEB1rc2AlE)
 
 ## Recruiter Quick Scan
 | Area | Details |
