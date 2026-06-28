@@ -20,25 +20,35 @@ Questions to answer:
 - Which responsibilities were separated?
 1. UI logic, Health, combat, movement, etc
 - How did this help debugging or iteration?
-1. i remembet
+1. this decouple different layers of logic. easier to dubug
 - Where did this approach still create coupling?
+1. referencing.
 - Which manager boundaries worked best in practice?
+1. might be health manager and movement manager
 
 ## 3. Why use an EventManager?
 
 Questions to answer:
 - Which systems needed to react to the same gameplay event?
+1. UI, health, audio
 - How did events help separate combat, UI, feedback, audio, and progression?
+1. event sends boardcast and other layers subscribe to it. This creates decoupling.
 - What risks did a global event bus introduce?
+1. bug is hard to trace because of event driven design.
 - Where did direct references still remain necessary?
+1. Unity Inspector for game obj.
 
 ## 4. Why create SkeletonCoordinator instead of making each skeleton independent?
 
 Questions to answer:
 - What encounter behavior required squad-level coordination?
+1. algro switch, role assignment. dynamic attack patterns.
 - How did roles like Frontliner, Flanker, and Backuper improve the fight?
+1. making the roles more dynamic
 - What was hard about coordinating multiple enemies?
+1. live status was hard to visualise. I did this mainly by logging
 - What bugs or edge cases came from role reassignment?
+1. cannot think of any
 
 ## 5. Why split Evil Wizard into phase-specific controllers?
 
