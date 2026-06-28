@@ -54,14 +54,19 @@ Questions to answer:
 
 Questions to answer:
 - What problems would one giant boss controller have created?
+1. state coupling. Hard to reuse the old FSM architecture. creating a new object was easier to implement and cleaner because 2 phases' animation are drastically different.
 - How did phase-specific controllers make the boss easier to reason about?
+1. explicitly control aniamtions etc. used polymorphism instead of if else blocks.
 - What tradeoffs did this introduce?
+1. more self standing objects rather than reuse resources.
 - If rebuilt today, would the split stay the same?
+1. I will make sure some resources are reusable.
 
 ## 6. Why separate combat, health, stamina, and feedback?
 
 Questions to answer:
 - Why not resolve everything directly inside attack code?
+1. violate 
 - How did this make the combat pipeline easier to extend?
 - What parts still felt tightly coupled?
 - Which boundaries were cleanest and which were the weakest?
