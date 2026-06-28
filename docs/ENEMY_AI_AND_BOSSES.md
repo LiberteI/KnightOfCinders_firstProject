@@ -49,13 +49,15 @@ flowchart TD
     ReplaceFlanker --> Sneak
 ```
 
-<!-- GIF: skeleton-role-system-demo -->
+![Skeleton role separation demo](gifs/skeleton-role-separation-demo.gif)
 
 ### Runtime Summary
 - Frontliners push direct melee pressure
 - Flanker manages spacing and timing from a different attack loop
 - Backupers hold defensive positions until promoted
 - `SkeletonCoordinator` reassigns roles as units weaken or die
+
+![Skeleton role replacement demo](gifs/skeleton-role-replacement-demo.gif)
 
 ## Trap Skeleton
 The tutorial skeleton uses the same actor framework but starts in `Trap` state and is activated by `TrapDetector`.
@@ -66,7 +68,7 @@ Runtime flow:
 - skeleton transitions into active state
 - health bar is enabled
 
-<!-- GIF: trap-skeleton-awakening-demo -->
+![Trap skeleton awakening demo](gifs/trap-skeleton-awakening-demo.gif)
 
 ## Dark Wolf
 Dark Wolf is an early boss centered on mobility, charge pressure, and a clear phase escalation.
@@ -107,7 +109,9 @@ Dark Wolf-specific features:
 - charge windup and collision payoff
 - vulnerable punish window after failed charge outcomes
 
-<!-- GIF: dark-wolf-boss-phase-demo -->
+![Dark Wolf phase transition demo](gifs/dark-wolf-phase-transition-demo.gif)
+
+![Dark Wolf punish window demo](gifs/dark-wolf-punish-window-demo.gif)
 
 ## Evil Wizard
 The final boss is split into two separate controllers.
@@ -176,8 +180,13 @@ flowchart TD
     HomingLaser --> P2Decide
 ```
 
-<!-- GIF: evil-wizard-phase-transition-demo -->
-<!-- GIF: evil-wizard-laser-wall-demo -->
+![Evil Wizard phase transition demo](gifs/evil-wizard-phase-transition-demo.gif)
+
+![Evil Wizard homing laser demo](gifs/evil-wizard-homing-laser-demo.gif)
+
+![Evil Wizard wolf summon demo](gifs/evil-wizard-wolf-summon-demo.gif)
+
+![Evil Wizard laser wall demo](gifs/evil-wizard-laser-wall-demo.gif)
 
 ## Employer-Relevant Takeaway
 This subsystem demonstrates:

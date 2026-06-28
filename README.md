@@ -58,26 +58,22 @@ The codebase is structured around actor-specific finite state machines, manager-
 
 ## Project Highlights
 ### Combat Responsiveness
-<!-- TODO: Add GIF after recording -->
-`docs/media/player-combat-combo-demo.gif`
+![Player light combo demo](docs/gifs/player-light-combo-demo.gif)
 
 Shows light/heavy combo flow, rolling, shield strike, stamina pressure, and animation-timed hit detection.
 
 ### Squad-Based Enemy AI
-<!-- TODO: Add GIF after recording -->
-`docs/media/skeleton-role-system-demo.gif`
+![Skeleton role separation demo](docs/gifs/skeleton-role-separation-demo.gif)
 
 Shows frontliners, flankers, and backupers creating coordinated pressure.
 
 ### Boss Phase Escalation
-<!-- TODO: Add GIF after recording -->
-`docs/media/dark-wolf-boss-phase-demo.gif`
+![Dark Wolf phase transition demo](docs/gifs/dark-wolf-phase-transition-demo.gif)
 
 Shows health-threshold phase change, charge pressure, and punish windows.
 
 ### Arena Lifecycle
-<!-- TODO: Add GIF after recording -->
-`docs/media/arena-lifecycle-demo.gif`
+![Arena camera lock demo](docs/gifs/arena-camera-lock-demo.gif)
 
 Shows trigger activation, camera lock-in, barriers, fight cleanup, and return to exploration.
 

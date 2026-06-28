@@ -40,7 +40,7 @@ flowchart LR
     Cleanup --> Explore
 ```
 
-<!-- GIF: arena-lifecycle-demo -->
+![Arena camera lock demo](gifs/arena-camera-lock-demo.gif)
 
 ## Exploration Cameras
 Exploration cameras are switched by region trigger membership:
@@ -50,6 +50,10 @@ Exploration cameras are switched by region trigger membership:
 
 This uses Cinemachine priority changes instead of hard teleports.
 
+![Exploration camera transition demo](gifs/exploration-camera-transition-demo.gif)
+
+![Rain scene trigger demo](gifs/rain-scene-trigger-demo.gif)
+
 ## Boss Cameras
 Each arena owns its own encounter camera through `ArenaSetUp`.
 
@@ -58,6 +62,8 @@ At runtime:
 - boss fight starts
 - camera shake rebinds to the active arena camera
 - cleanup lowers the arena camera priority
+
+![Arena camera unlock demo](gifs/arena-camera-unlock-demo.gif)
 
 ## Ambience and Music
 `AmbienceManager` reacts to scene-label changes and swaps:
@@ -70,6 +76,8 @@ At runtime:
 - victory
 - defeat
 
+![Lightning weather effect demo](gifs/lightning-weather-effect-demo.gif)
+
 ## UI
 `UIManager` handles:
 - player health bar
@@ -78,6 +86,8 @@ At runtime:
 - delayed bar animations
 
 This presentation reacts to health and stamina events rather than polling combat directly.
+
+![Intro UI presentation demo](gifs/intro-ui-presentation-demo.gif)
 
 ## Cutscene Flow
 `CutSceneManager` handles:
@@ -101,7 +111,9 @@ flowchart TD
     Slides --> NextScene[Load Gameplay or Menu Scene]
 ```
 
-<!-- GIF: cutscene-handoff-demo -->
+![Victory cutscene handoff demo](gifs/victory-cutscene-handoff-demo.gif)
+
+![Defeat cutscene handoff demo](gifs/defeat-cutscene-handoff-demo.gif)
 
 ## Employer-Relevant Takeaway
 This subsystem demonstrates:

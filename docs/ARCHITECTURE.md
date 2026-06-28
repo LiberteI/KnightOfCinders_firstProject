@@ -73,7 +73,7 @@ flowchart TD
     DeathCheck -->|Yes| Die[Die]
 ```
 
-<!-- GIF: player-fsm-state-demo -->
+![Player roll dodge demo](gifs/player-roll-dodge-demo.gif)
 
 ## Responsibility Boundaries
 ### Actor Roots
@@ -141,7 +141,7 @@ flowchart LR
     EventBus --> Audio[AudioFeedbackManager]
 ```
 
-<!-- GIF: combat-event-pipeline-demo -->
+![Combat hit feedback demo](gifs/combat-hit-feedback-demo.gif)
 
 ## Design Patterns
 Formal patterns clearly present:

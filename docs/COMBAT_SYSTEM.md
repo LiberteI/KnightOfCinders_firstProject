@@ -27,7 +27,7 @@ flowchart LR
     EventBus --> Feedback[Hit Stop / Camera Shake / Audio]
 ```
 
-<!-- GIF: player-combat-combo-demo -->
+![Player light combo demo](gifs/player-light-combo-demo.gif)
 
 ## Player Move Set
 Implemented player actions:
@@ -44,6 +44,8 @@ Implemented player actions:
 - Heavy combo uses a separate combo timer
 - Late combo steps get stronger feedback values
 - Combo state is stored through attack-step flags in `CombatManager`
+
+![Player heavy attack demo](gifs/player-heavy-attack-demo.gif)
 
 ## Stamina System
 Stamina gates both offense and defense.
@@ -82,6 +84,8 @@ Enemy health supports:
 - Roll grants invulnerability during the dodge window
 - Attack states are generally interruptible
 
+![Player roll dodge demo](gifs/player-roll-dodge-demo.gif)
+
 ## Hit Detection
 `HitBoxManager` translates collisions into:
 - attack initiator
@@ -109,7 +113,9 @@ flowchart LR
     EventBus --> Bars[UIManager via Health/Stamina Events]
 ```
 
-<!-- GIF: hit-feedback-demo -->
+![Combat hit feedback demo](gifs/combat-hit-feedback-demo.gif)
+
+![Player hurt feedback demo](gifs/player-hurt-feedback-demo.gif)
 
 ## Key Implementation Summary
 - State machines decide combat intent
@@ -124,3 +130,4 @@ This subsystem demonstrates:
 - animation-timed combat sequencing
 - event-driven hit resolution
 - integration between gameplay and presentation feedback
+ 
