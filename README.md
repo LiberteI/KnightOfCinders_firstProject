@@ -115,7 +115,6 @@ Shows combat resolution handing off cleanly into cutscene presentation through g
 - [Scene Flow and Presentation](docs/SCENE_FLOW_AND_PRESENTATION.md)
 - [Known Issues and Testing](docs/KNOWN_ISSUES_AND_TESTING.md)
 - [Engineering Decisions](docs/ENGINEERING_DECISIONS.md)
-- [GIF Capture Plan](docs/GIF_CAPTURE_PLAN.md)
 - [Game Design](docs/GAME_DESIGN.md)
 
 ## Known Limitations
