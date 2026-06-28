@@ -1,102 +1,129 @@
 # Engineering Decisions
 
-This document records the major design decisions behind Knight of Cinders. It is intentionally written as a reflection space so I can explain not only what I built, but why I built it this way.
+This document records the major design decisions behind Knight of Cinders. It is intentionally reflective: the goal is to explain not only what I built, but why I built it this way and what tradeoffs came with those choices.
 
 ## 1. Why use finite state machines for actors?
 
-Questions to answer:
-- What problems did FSMs solve for player and enemy behavior?
-1. It provides a more reusable, more extenable system for new actions. it also provides explicite control for behaviors like animations, audio synchronization, and feedback. 
-- Why was this better than putting all behavior in one controller?
-1. Before FSM, There was a script called User controller. It produced weird bugs like animation blending.
-- What became easier after each actor owned explicit states?
-1. all animations and states own their own segragated state, preventing mixture.
-- What were the downsides?
-1. when there are more and more states as player's actions become more complex, we might need to introduce new architectures like child states, parent states to group similar states. So for example: idle-move or related states can integrate into a big block and expose a centred state to transition to states built for other concerns like attack etc.
+FSMs solved the biggest runtime problem in this project: keeping actor behavior explicit while the number of actions kept growing. The player alone needs locomotion, attacks, defend, roll, jump, hurt, death, and invulnerability, while enemies and bosses need their own decision loops, attacks, hurt states, and phase-specific transitions. The FSM structure let each actor own a bounded set of valid behaviors instead of burying everything in one long update loop.
+
+This was better than one controller because the project had already started to run into animation and state-mixing problems before the current FSM structure was established. In practice, explicit states made it much easier to control animation entry, timing-sensitive combat windows, and transitions such as `Idle -> Attack`, `Run -> Roll`, or `Charge -> Vulnerable` without accidental overlap. The player root in `script/Player/Knight.cs` and the enemy roots in `script/EnemyAI/...` all follow the same pattern: register states, store the current state, and swap through `TransitionState(...)`.
+
+What became easier after that:
+- isolating animation-driven behavior inside one state at a time
+- adding new actions without rewriting one giant decision function
+- reusing the same control pattern across player, skeletons, Dark Wolf, and Evil Wizard
+- reasoning about boss phases as explicit runtime modes instead of boolean soup
+
+The downsides are mostly scale and maintenance. As the action set grows, the number of state classes grows with it. That is manageable in this project, but if it expanded further I would likely introduce more hierarchy or shared abstractions for related movement/combat states instead of keeping every state entirely flat.
 
 ## 2. Why use manager components instead of one large controller?
 
-Questions to answer:
-- Which responsibilities were separated?
-1. UI logic, Health, combat, movement, etc
-- How did this help debugging or iteration?
-1. this decouple different layers of logic. easier to dubug
-- Where did this approach still create coupling?
-1. referencing.
-- Which manager boundaries worked best in practice?
-1. might be health manager and movement manager
+I separated responsibilities into focused manager components because combat, movement, stamina, health, feedback, UI, and progression all change for different reasons. On the player side, `MovementManager`, `CombatManager`, `StaminaManager`, and `HealthManager` each own a distinct slice of runtime behavior. On the enemy side, the same pattern appears again through base capability layers like `EnemyMovementManager`, `EnemyCombatManager`, and `EnemyHealthManager`, plus specialized managers for bosses and encounters.
+
+This helped debugging and iteration because balance or bug-fixing work was usually localized. If I needed to tune stamina pressure, I could stay in `StaminaManager`. If roll rules or jump movement felt wrong, the relevant logic lived in `MovementManager`. If hit resolution or combo timing felt off, the work was in `CombatManager` and `HitBoxManager`. That separation mattered a lot in a project where most validation was manual playtesting.
+
+The weakness is that the code is separated by responsibility, but not fully decoupled. Many managers still reach each other through serialized references and direct component access, especially through parameter structs like `KnightParameter` and enemy parameter containers. So the boundaries are cleaner than a monolith, but not yet truly interface-driven.
+
+The strongest manager boundaries in practice were:
+- `HealthManager`, because health, death, and UI broadcast behavior stayed relatively coherent
+- `StaminaManager`, because action gating and regeneration rules are clearly centralized
+- `GamePlayCoordinator`, because encounter lifecycle concerns are kept out of combat code
+
+The weakest boundaries are around player combat and movement, where responsiveness required a lot of cross-checking between stamina, movement, combat flags, animator state, and hurt/death conditions.
 
 ## 3. Why use an EventManager?
 
-Questions to answer:
-- Which systems needed to react to the same gameplay event?
-1. UI, health, audio
-- How did events help separate combat, UI, feedback, audio, and progression?
-1. event sends boardcast and other layers subscribe to it. This creates decoupling.
-- What risks did a global event bus introduce?
-1. bug is hard to trace because of event driven design.
-- Where did direct references still remain necessary?
-1. Unity Inspector for game obj.
+Several systems needed to react to the same gameplay event without being tightly coupled to each other. A hit should affect combat resolution, health, camera shake, audio feedback, and UI. A boss-fight transition should affect barriers, cameras, ambience, music, and fight cleanup. A win or defeat event should affect cutscenes and presentation flow. That is exactly what `script/EventManager.cs` is doing.
+
+Events helped separate combat, UI, feedback, audio, and progression because the event source does not need to know every downstream reaction. `HitBoxManager` can raise `OnHitOccured`, while `CombatManager`, enemy combat managers, `CombatFeedbackManager`, and `AudioFeedbackManager` each react in their own way. `GamePlayCoordinator`, `UIManager`, `AmbienceManager`, `BackGroundMusicManager`, and cutscene helpers all subscribe to different slices of the same event layer.
+
+The main risk of a global event bus is traceability. When many systems subscribe to a shared static hub, the runtime flow becomes harder to follow than direct method calls. That is a tradeoff I accepted because it simplified cross-system coordination, but it does mean event-driven bugs can take longer to trace.
+
+Direct references still remain necessary in several places:
+- serialized references in the Unity inspector
+- parameter objects that bundle related runtime components
+- actor-specific manager calls where one subsystem genuinely owns another runtime rule
+
+So the project is not “everything through events.” The event layer helps for cross-system reactions, while direct references still handle local actor behavior.
 
 ## 4. Why create SkeletonCoordinator instead of making each skeleton independent?
 
-Questions to answer:
-- What encounter behavior required squad-level coordination?
-1. algro switch, role assignment. dynamic attack patterns.
-- How did roles like Frontliner, Flanker, and Backuper improve the fight?
-1. making the roles more dynamic
-- What was hard about coordinating multiple enemies?
-1. live status was hard to visualise. I did this mainly by logging
-- What bugs or edge cases came from role reassignment?
-1. cannot think of any
+The skeleton encounter needed behavior that no single skeleton could own alone. The point of that fight is not just “several enemies chasing the player.” It is a coordinated group with role assignment, replacement, and pressure from different angles. That is why `SkeletonCoordinator` exists on top of the local skeleton FSMs.
+
+Roles like `Frontliner`, `Flanker`, and `Backuper` improved the fight because they created different tactical jobs:
+- frontliners maintain direct melee pressure
+- the flanker changes spacing and attack timing from another angle
+- backupers hold until promoted, which prevents the encounter from collapsing once active roles die
+
+The coordination work was hard because it required tracking live combat state across multiple enemies at once: who is dead, who is weak enough to replace, who should become the next flanker, and how role reassignment changes attack behavior. The implementation evidence for this is in `script/EnemyAI/Skeleton_New/SkeletonCoordinator.cs`, where the current frontliners and flanker are tracked explicitly and replaced when needed.
+
+The main edge cases came from runtime reassignment rather than from the local FSM itself. Promotion logic has to avoid dead skeletons, avoid assigning the wrong role twice, and keep encounter pressure readable while the roster changes. Even when those bugs are solvable, they are the hardest part of this encounter to reason about because the logic is distributed across both coordinator and unit-level behavior.
 
 ## 5. Why split Evil Wizard into phase-specific controllers?
 
-Questions to answer:
-- What problems would one giant boss controller have created?
-1. state coupling. Hard to reuse the old FSM architecture. creating a new object was easier to implement and cleaner because 2 phases' animation are drastically different.
-- How did phase-specific controllers make the boss easier to reason about?
-1. explicitly control aniamtions etc. used polymorphism instead of if else blocks.
-- What tradeoffs did this introduce?
-1. more self standing objects rather than reuse resources.
-- If rebuilt today, would the split stay the same?
-1. I will make sure some resources are reusable.
+The Evil Wizard was split into two controllers because phase 1 and phase 2 are meaningfully different actors in practice, not just two small variants of the same attack loop. Phase 1 focuses on teaching telegraphs and melee/ranged mixups. Phase 2 adds a different state set, different attack families, summons, homing lasers, laser wall logic, and a different escalation structure. Keeping all of that in one giant boss controller would have created a much harder class to reason about.
+
+The split made the boss easier to understand because each controller owns a tighter state set:
+- `EvilWizard` + `EW1CombatManager` + phase 1 states
+- `EvilWizardPhase2` + `EW2CombatManager` + phase 2 states
+
+That reduced the amount of phase-branching logic inside a single update path and let the existing FSM pattern stay readable. It also matched the production reality that the animation and attack behavior between the two phases are substantially different.
+
+The tradeoff is duplication and extra coordination cost. Two controllers means more objects, more serialized references, and more setup for the phase transition itself. If I rebuilt this today, I would likely keep the phase split, but I would push harder on reusing shared boss utilities and configuration data so the split stays clean without duplicating as much runtime plumbing.
 
 ## 6. Why separate combat, health, stamina, and feedback?
 
-Questions to answer:
-- Why not resolve everything directly inside attack code?
-1. violate SOLID. hard to debug.
-- How did this make the combat pipeline easier to extend?
-1. components are separated so it will be easier to extend.
-- What parts still felt tightly coupled?
-1. no idea
-- Which boundaries were cleanest and which were the weakest?
-1. did not evaluate
+I did not want attack code to own every consequence of an action. If attack logic also handled damage resolution, stamina rules, UI updates, hit stop, camera shake, audio, death, and progression reactions directly, the combat layer would become brittle very quickly. Separating these concerns made the runtime pipeline much easier to read and extend.
+
+In practice the flow is:
+- combat intent and attack timing come from state + `CombatManager`
+- hit detection becomes `HitData` in `HitBoxManager`
+- damage resolution lands in combat/health layers
+- stamina costs live in `StaminaManager`
+- feedback reacts through event subscribers
+
+That separation is why the project can route one hit into multiple outcomes without collapsing everything into one function.
+
+The parts that still feel tightly coupled are the player-side runtime checks. Movement, stamina, combat flags, and hurt/death rules all need to agree for the character to feel responsive, so those systems still reference each other frequently. The cleanest boundaries are health/stamina broadcasting and the event-driven feedback layer. The weakest boundary is the player action layer, where responsiveness required a lot of direct coordination between managers.
 
 ## 7. Why use trigger-driven arena orchestration?
 
-Questions to answer:
-- What did `GamePlayCoordinator` simplify?
-1. it is in charge of the playthrough. As this game uses predefined levels, there is less of randomised enermies.
-- Why package encounter data into `ArenaSetUp`?
-1. so that arena setup can be reused once data is populated
-- What made this easier to scale across multiple encounters?
-1. reusability
-- What would you redesign about the trigger / cleanup lifecycle?
-1. i may need to reaserch on that cause the overall scale of this game is relatively small.
+`GamePlayCoordinator` exists because encounter flow is a scene-level concern, not a boss-specific concern. The game uses predefined levels and curated encounters, so it made more sense to centralize arena activation, barriers, camera changes, and cleanup than to make every encounter reinvent that logic separately.
+
+`ArenaSetUp` packages together the encounter-specific data that the coordinator needs, such as barriers, boss object, and encounter camera. That makes the trigger system reusable across multiple fights because the orchestration logic can stay mostly the same while the concrete arena data changes.
+
+What this simplified:
+- enter-trigger handling
+- barrier toggling
+- encounter camera priority changes
+- boss activation
+- fight cleanup and return to exploration
+- broadcasting boss-fight lifecycle events to other systems
+
+This also scales better across encounters because the shared lifecycle is centralized while the clear condition can remain encounter-specific. For example, different encounters can raise `RaiseExitBossFight(curArena)` when they are done, and `GamePlayCoordinator` still owns the common cleanup response.
+
+If I redesigned this area, I would make the trigger/cleanup lifecycle more data-driven and less dependent on manually wired scene references. The current setup works for the size of this project, but it would need stronger tooling and validation if the game expanded.
 
 ## 8. What would I redesign if I rebuilt this project?
 
-Questions to answer:
-- Which systems would you keep?
-1. FSM, separations of concerns.
-- Which systems would you simplify?
-1. I might need to find a way to let all bosses reuse some pattern. 
-- Where would you add interfaces, namespaces, tests, or ScriptableObjects?
-1. I might need to use tests for business logic. scriptable objects for health damage data etc. interface for health manager to inverse dependency.
-- What did this project teach you about software architecture?
-1. SOLID
-2. Design patterns
-3. decoupling
-4. debugging.
+I would keep the core architectural direction:
+- actor-owned FSMs
+- separation of movement/combat/health/stamina responsibilities
+- event-driven cross-system reactions
+- coordinator-style encounter orchestration
+
+I would simplify and strengthen three areas in particular.
+
+First, I would improve reuse across boss systems. The current split between Dark Wolf and Evil Wizard works, but phase logic, vulnerability windows, cooldown-driven decisions, and attack orchestration could benefit from more shared patterns.
+
+Second, I would add clearer interfaces and namespaces. The repo already has strong folder-based domain boundaries, but many systems still live in the global namespace and depend on direct references. More explicit interfaces would make high-risk gameplay rules easier to test and swap.
+
+Third, I would add more data-driven configuration. ScriptableObjects would be a good fit for tunable gameplay values such as health, stamina costs, damage tables, encounter configuration, and maybe even some attack or phase parameters. Right now many of those rules are hard-coded or inspector-wired in ways that are fine for a solo project but less scalable.
+
+I would also add automated tests where the rules are most brittle:
+- stamina deduction and regeneration behavior
+- health/death transitions
+- state-transition guard logic
+- encounter completion and cleanup conditions
+
+The main architectural lesson from this project was that explicit structure matters most when gameplay complexity starts compounding. FSMs, separated managers, and event-driven reactions all helped keep the project understandable. At the same time, the project also taught me where “modular” is not the same as “loosely coupled,” and where the next step would be stronger interfaces, cleaner shared abstractions, and better test coverage.
