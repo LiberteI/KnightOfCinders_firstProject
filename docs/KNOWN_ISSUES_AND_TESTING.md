@@ -7,6 +7,8 @@ This repository preserves the gameplay code, architecture, and main scenes, but 
 2. Testing is manual only. There are no automated unit, integration, or regression tests.
 3. The architecture is modular by feature, but many systems still rely on serialized references and direct component access rather than stricter interface boundaries.
 4. Some in-level camera transitions still need tuning, especially the dungeon-to-exploration handoff.
+5. Stair and step traversal is still rough, with some climbs requiring repeated jumps and producing blocky movement.
+6. Difficulty tuning is intentionally demanding, and some encounters may read as overtuned for broader players.
 
 ## Testing Approach
 Testing for this project was entirely manual.
@@ -31,8 +33,9 @@ Manual testing method:
 ## What I Would Improve Next
 - Add automated tests for high-risk gameplay rules and state transitions
 - Improve camera-transition polish in narrow traversal spaces
+- Smooth out stair and step traversal to reduce repeated-jump movement
+- Rebalance a few encounters to keep challenge high without reading as overtuned
 - Reduce direct component coupling with better interfaces and namespaces
-- Add recorded GIFs and short system demos tied directly to the docs
 
 ## Employer-Relevant Takeaway
 Even with the repository limitations, the project still provides strong evidence of:
