@@ -55,42 +55,22 @@ Enemies and bosses use `StateTransitionInterface` with:
 ### Player FSM Flow
 ```mermaid
 flowchart TD
-    Idle --> Walk
-    Walk --> Run
-    Walk --> Idle
-    Idle --> Jump
-    Walk --> Jump
-    Run --> Jump
-    Idle --> Defend
-    Walk --> Defend
-    Run --> Defend
-    Idle --> Attack1
-    Walk --> Attack1
-    Idle --> Heavy1
-    Walk --> Heavy1
-    Run --> RunAttack
-    Jump --> JumpAttack
-    Idle --> Roll
-    Walk --> Roll
-    Run --> Roll
-    Attack1 --> Attack2
-    Attack2 --> Attack3
-    Attack1 --> Idle
-    Attack2 --> Idle
-    Attack3 --> Idle
-    Heavy1 --> Heavy2
-    Heavy1 --> Idle
-    Heavy2 --> Idle
-    Jump --> Idle
-    Jump --> Walk
-    Jump --> Run
-    Roll --> Idle
-    Defend --> Idle
-    Idle --> Hurt
-    Walk --> Hurt
-    Run --> Hurt
-    Hurt --> Idle
-    Hurt --> Die
+    Input[Input] --> Locomotion[Locomotion States]
+    Input --> Combat[Combat States]
+    Input --> Defense[Defense / Roll States]
+
+    Locomotion --> Move[Idle / Walk / Run / Jump]
+    Combat --> Attacks[Light Combo / Heavy Combo / Run Attack / Jump Attack]
+    Defense --> Guard[Defend / Roll]
+
+    Attacks --> Recovery[Recovery / Return to Movement]
+    Guard --> Recovery
+    Move --> Hurt[Hurt]
+    Attacks --> Hurt
+    Guard --> Hurt
+    Hurt --> DeathCheck{Health <= 0?}
+    DeathCheck -->|No| Recovery
+    DeathCheck -->|Yes| Die[Die]
 ```
 
 <!-- GIF: player-fsm-state-demo -->

@@ -2,23 +2,38 @@
 
 A solo-built 2D Unity action game focused on melee combat, boss phases, and finite-state-machine-driven enemy behavior.
 
+## Play / Watch
+- 🎮 **Play Demo:** [Google Drive download](https://drive.google.com/file/d/1QigchoK-Ckn5wDokIMy8jG526GJFgCHP/view?usp=sharing)
+- ▶️ **Watch Trailer:** [YouTube trailer](https://www.youtube.com/watch?v=DgtHopB85VI)
+
 ## Recruiter Quick Scan
-- Solo gameplay programming project
-- Built in about 2 months
-- Estimated effort: ~600 hours
-- Unity / C#
-- 5 FSM-driven actor families: player, tutorial skeleton, skeleton squad, Dark Wolf, Evil Wizard phase 1 / phase 2
-- 4 major encounter types: Trap Skeleton, Skeleton Army, Dark Wolf, Evil Wizard
-- Major systems: melee combat, stamina/health, event-driven hit pipeline, squad-role AI, boss phase logic, camera/scene flow, cutscenes, ambience/UI
+| Area | Details |
+|---|---|
+| Team | Solo project |
+| Duration | About 2 months |
+| Estimated Effort | ~600 hours |
+| Engine / Language | Unity / C# |
+| Core Architecture | Component-based managers + actor-specific FSMs |
+| Major Encounters | Trap Skeleton, Skeleton Army, Dark Wolf, Evil Wizard |
+| FSM-Driven Actor Families | 5: player, tutorial skeleton, skeleton squad, Dark Wolf, Evil Wizard phase 1 / phase 2 |
+| Key Systems | Combat, stamina, health, hit feedback, enemy AI, boss phases, arena flow, UI, ambience, cutscenes |
+| Technical Docs | 6+ deep-dive Markdown files |
+| System Scope | 10+ gameplay and presentation subsystems across combat, AI, UI, audio, scene flow, and cutscenes |
 
 ## Project Summary
 Knight of Cinders is a 2D Souls-like action game where the player fights through a ruined kingdom to defeat an evil wizard and reclaim the realm. The project emphasizes deliberate melee combat, readable telegraphs, stamina management, and escalating encounter design.
 
 The codebase is structured around actor-specific finite state machines, manager-based gameplay components, and an event-driven combat pipeline. The strongest implementation areas are combat flow, enemy behavior, boss phase logic, and encounter orchestration.
 
-## Download
-- Demo build: [Google Drive download](https://drive.google.com/file/d/1QigchoK-Ckn5wDokIMy8jG526GJFgCHP/view?usp=sharing)
-- Trailer: [YouTube trailer](https://www.youtube.com/watch?v=DgtHopB85VI)
+## Tech Stack
+- Unity
+- C#
+- `MonoBehaviour` component architecture
+- Cinemachine
+- Unity Animator / animation-driven combat
+- Unity UI
+- Unity Audio
+- Mermaid diagrams for technical documentation
 
 ## Controls
 - `WASD` move
@@ -39,6 +54,31 @@ The codebase is structured around actor-specific finite state machines, manager-
 - Stamina, health, hit stop, camera shake, and combat-audio feedback systems
 - Arena lifecycle orchestration with camera lock-in, barriers, activation, and cleanup
 - Scene-context switching, ambience control, and cutscene handoff
+
+## Project Highlights
+### Combat Responsiveness
+<!-- TODO: Add GIF after recording -->
+`docs/media/player-combat-combo-demo.gif`
+
+Shows light/heavy combo flow, rolling, shield strike, stamina pressure, and animation-timed hit detection.
+
+### Squad-Based Enemy AI
+<!-- TODO: Add GIF after recording -->
+`docs/media/skeleton-role-system-demo.gif`
+
+Shows frontliners, flankers, and backupers creating coordinated pressure.
+
+### Boss Phase Escalation
+<!-- TODO: Add GIF after recording -->
+`docs/media/dark-wolf-boss-phase-demo.gif`
+
+Shows health-threshold phase change, charge pressure, and punish windows.
+
+### Arena Lifecycle
+<!-- TODO: Add GIF after recording -->
+`docs/media/arena-lifecycle-demo.gif`
+
+Shows trigger activation, camera lock-in, barriers, fight cleanup, and return to exploration.
 
 ## What This Demonstrates
 - Gameplay programming in Unity with C#
@@ -61,6 +101,8 @@ The codebase is structured around actor-specific finite state machines, manager-
 - [Enemy AI and Bosses](docs/ENEMY_AI_AND_BOSSES.md)
 - [Scene Flow and Presentation](docs/SCENE_FLOW_AND_PRESENTATION.md)
 - [Known Issues and Testing](docs/KNOWN_ISSUES_AND_TESTING.md)
+- [Engineering Decisions](docs/ENGINEERING_DECISIONS.md)
+- [GIF Capture Plan](docs/GIF_CAPTURE_PLAN.md)
 - [Game Design](docs/GAME_DESIGN.md)
 
 ## Known Limitations
