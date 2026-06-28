@@ -124,3 +124,4 @@ Shows combat resolution handing off cleanly into cutscene presentation through g
 - A few in-level camera transitions still need tuning, especially around dungeon/exploration handoff.
 - Stair and step traversal is still rough, with some climbs requiring repeated jumps and producing blocky movement.
 - Difficulty tuning is intentionally demanding, and some encounters may read as overtuned for broader players.
+- Knockback direction currently depends too heavily on `scale.x` facing data, which becomes unreliable when attacker and target overlap closely; a more explicit directional model would be more robust. (rotating y value of sprites)
