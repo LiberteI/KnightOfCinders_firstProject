@@ -66,23 +66,37 @@ Questions to answer:
 
 Questions to answer:
 - Why not resolve everything directly inside attack code?
-1. violate 
+1. violate SOLID. hard to debug.
 - How did this make the combat pipeline easier to extend?
+1. components are separated so it will be easier to extend.
 - What parts still felt tightly coupled?
+1. no idea
 - Which boundaries were cleanest and which were the weakest?
+1. did not evaluate
 
 ## 7. Why use trigger-driven arena orchestration?
 
 Questions to answer:
 - What did `GamePlayCoordinator` simplify?
+1. it is in charge of the playthrough. As this game uses predefined levels, there is less of randomised enermies.
 - Why package encounter data into `ArenaSetUp`?
+1. so that arena setup can be reused once data is populated
 - What made this easier to scale across multiple encounters?
+1. reusability
 - What would you redesign about the trigger / cleanup lifecycle?
+1. i may need to reaserch on that cause the overall scale of this game is relatively small.
 
 ## 8. What would I redesign if I rebuilt this project?
 
 Questions to answer:
 - Which systems would you keep?
+1. FSM, separations of concerns.
 - Which systems would you simplify?
+1. I might need to find a way to let all bosses reuse some pattern. 
 - Where would you add interfaces, namespaces, tests, or ScriptableObjects?
+1. I might need to use tests for business logic. scriptable objects for health damage data etc. interface for health manager to inverse dependency.
 - What did this project teach you about software architecture?
+1. SOLID
+2. Design patterns
+3. decoupling
+4. debugging.
