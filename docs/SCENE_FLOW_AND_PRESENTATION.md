@@ -40,6 +40,7 @@ flowchart LR
     Cleanup --> Explore
 ```
 
+**GIF: Arena Camera Lock Demo**
 ![Arena camera lock demo](gifs/arena-camera-lock-demo.gif)
 
 ## Exploration Cameras
@@ -50,8 +51,10 @@ Exploration cameras are switched by region trigger membership:
 
 This uses Cinemachine priority changes instead of hard teleports.
 
+**GIF: Exploration Camera Transition Demo**
 ![Exploration camera transition demo](gifs/exploration-camera-transition-demo.gif)
 
+**GIF: Rain Scene Trigger Demo**
 ![Rain scene trigger demo](gifs/rain-scene-trigger-demo.gif)
 
 ## Boss Cameras
@@ -63,6 +66,7 @@ At runtime:
 - camera shake rebinds to the active arena camera
 - cleanup lowers the arena camera priority
 
+**GIF: Arena Camera Unlock Demo**
 ![Arena camera unlock demo](gifs/arena-camera-unlock-demo.gif)
 
 ## Ambience and Music
@@ -76,6 +80,7 @@ At runtime:
 - victory
 - defeat
 
+**GIF: Lightning Weather Effect Demo**
 ![Lightning weather effect demo](gifs/lightning-weather-effect-demo.gif)
 
 ## UI
@@ -87,6 +92,7 @@ At runtime:
 
 This presentation reacts to health and stamina events rather than polling combat directly.
 
+**GIF: Intro UI Presentation Demo**
 ![Intro UI presentation demo](gifs/intro-ui-presentation-demo.gif)
 
 ## Cutscene Flow
@@ -111,8 +117,10 @@ flowchart TD
     Slides --> NextScene[Load Gameplay or Menu Scene]
 ```
 
+**GIF: Victory Cutscene Handoff Demo**
 ![Victory cutscene handoff demo](gifs/victory-cutscene-handoff-demo.gif)
 
+**GIF: Defeat Cutscene Handoff Demo**
 ![Defeat cutscene handoff demo](gifs/defeat-cutscene-handoff-demo.gif)
 
 ## Employer-Relevant Takeaway

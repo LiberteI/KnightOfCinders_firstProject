@@ -27,6 +27,7 @@ flowchart LR
     EventBus --> Feedback[Hit Stop / Camera Shake / Audio]
 ```
 
+**GIF: Player Light Combo Demo**
 ![Player light combo demo](gifs/player-light-combo-demo.gif)
 
 ## Player Move Set
@@ -45,6 +46,7 @@ Implemented player actions:
 - Late combo steps get stronger feedback values
 - Combo state is stored through attack-step flags in `CombatManager`
 
+**GIF: Player Heavy Attack Demo**
 ![Player heavy attack demo](gifs/player-heavy-attack-demo.gif)
 
 ## Stamina System
@@ -84,6 +86,7 @@ Enemy health supports:
 - Roll grants invulnerability during the dodge window
 - Attack states are generally interruptible
 
+**GIF: Player Roll Dodge Demo**
 ![Player roll dodge demo](gifs/player-roll-dodge-demo.gif)
 
 ## Hit Detection
@@ -113,8 +116,10 @@ flowchart LR
     EventBus --> Bars[UIManager via Health/Stamina Events]
 ```
 
+**GIF: Combat Hit Feedback Demo**
 ![Combat hit feedback demo](gifs/combat-hit-feedback-demo.gif)
 
+**GIF: Player Hurt Feedback Demo**
 ![Player hurt feedback demo](gifs/player-hurt-feedback-demo.gif)
 
 ## Key Implementation Summary

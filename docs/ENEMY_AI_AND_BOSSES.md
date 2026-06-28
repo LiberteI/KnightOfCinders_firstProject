@@ -49,6 +49,7 @@ flowchart TD
     ReplaceFlanker --> Sneak
 ```
 
+**GIF: Skeleton Role Separation Demo**
 ![Skeleton role separation demo](gifs/skeleton-role-separation-demo.gif)
 
 ### Runtime Summary
@@ -57,6 +58,7 @@ flowchart TD
 - Backupers hold defensive positions until promoted
 - `SkeletonCoordinator` reassigns roles as units weaken or die
 
+**GIF: Skeleton Role Replacement Demo**
 ![Skeleton role replacement demo](gifs/skeleton-role-replacement-demo.gif)
 
 ## Trap Skeleton
@@ -68,6 +70,7 @@ Runtime flow:
 - skeleton transitions into active state
 - health bar is enabled
 
+**GIF: Trap Skeleton Awakening Demo**
 ![Trap skeleton awakening demo](gifs/trap-skeleton-awakening-demo.gif)
 
 ## Dark Wolf
@@ -109,8 +112,10 @@ Dark Wolf-specific features:
 - charge windup and collision payoff
 - vulnerable punish window after failed charge outcomes
 
+**GIF: Dark Wolf Phase Transition Demo**
 ![Dark Wolf phase transition demo](gifs/dark-wolf-phase-transition-demo.gif)
 
+**GIF: Dark Wolf Punish Window Demo**
 ![Dark Wolf punish window demo](gifs/dark-wolf-punish-window-demo.gif)
 
 ## Evil Wizard
@@ -180,12 +185,16 @@ flowchart TD
     HomingLaser --> P2Decide
 ```
 
+**GIF: Evil Wizard Phase Transition Demo**
 ![Evil Wizard phase transition demo](gifs/evil-wizard-phase-transition-demo.gif)
 
+**GIF: Evil Wizard Homing Laser Demo**
 ![Evil Wizard homing laser demo](gifs/evil-wizard-homing-laser-demo.gif)
 
+**GIF: Evil Wizard Wolf Summon Demo**
 ![Evil Wizard wolf summon demo](gifs/evil-wizard-wolf-summon-demo.gif)
 
+**GIF: Evil Wizard Laser Wall Demo**
 ![Evil Wizard laser wall demo](gifs/evil-wizard-laser-wall-demo.gif)
 
 ## Employer-Relevant Takeaway

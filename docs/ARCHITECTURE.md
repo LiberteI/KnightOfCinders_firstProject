@@ -73,6 +73,7 @@ flowchart TD
     DeathCheck -->|Yes| Die[Die]
 ```
 
+**GIF: Player Roll Dodge Demo**
 ![Player roll dodge demo](gifs/player-roll-dodge-demo.gif)
 
 ## Responsibility Boundaries
@@ -141,6 +142,7 @@ flowchart LR
     EventBus --> Audio[AudioFeedbackManager]
 ```
 
+**GIF: Combat Hit Feedback Demo**
 ![Combat hit feedback demo](gifs/combat-hit-feedback-demo.gif)
 
 ## Design Patterns
