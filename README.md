@@ -61,31 +61,37 @@ The codebase is structured around actor-specific finite state machines, manager-
 **GIF: Player Light Combo Demo**
 ![Player light combo demo](docs/gifs/player-light-combo-demo.gif)
 
-Shows light/heavy combo flow, rolling, shield strike, stamina pressure, and animation-timed hit detection.
+Shows light combo flow, stamina pressure, and animation-timed melee responsiveness.
 
 ### Squad-Based Enemy AI
 **GIF: Skeleton Role Separation Demo**
 ![Skeleton role separation demo](docs/gifs/skeleton-role-separation-demo.gif)
 
-Shows frontliners, flankers, and backupers creating coordinated pressure.
+Shows frontliners and a flanker creating readable coordinated pressure.
 
 ### Boss Phase Escalation
 **GIF: Dark Wolf Phase Transition Demo**
 ![Dark Wolf phase transition demo](docs/gifs/dark-wolf-phase-transition-demo.gif)
 
-Shows health-threshold phase change, charge pressure, and punish windows.
+Shows health-threshold phase escalation and a clear punish-driven boss loop.
 
 ### Final Boss Spell Pressure
 **GIF: Evil Wizard Laser Wall Demo**
 ![Evil Wizard laser wall demo](docs/gifs/evil-wizard-laser-wall-demo.gif)
 
-Shows the final boss's arena-wide laser-wall attack pattern and the vulnerability window that follows it.
+Shows an arena-wide spell pattern and the recovery window that follows it.
 
 ### Arena Lifecycle
 **GIF: Arena Camera Lock Demo**
 ![Arena camera lock demo](docs/gifs/arena-camera-lock-demo.gif)
 
-Shows trigger activation, camera lock-in, barriers, fight cleanup, and return to exploration.
+Shows trigger activation, camera lock-in, and encounter-state presentation.
+
+### Gameplay To Cutscene Handoff
+**GIF: Victory Cutscene Handoff Demo**
+![Victory cutscene handoff demo](docs/gifs/victory-cutscene-handoff-demo.gif)
+
+Shows combat resolution handing off cleanly into cutscene presentation through game events.
 
 ## What This Demonstrates
 - Gameplay programming in Unity with C#
