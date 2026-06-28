@@ -75,6 +75,12 @@ Shows frontliners, flankers, and backupers creating coordinated pressure.
 
 Shows health-threshold phase change, charge pressure, and punish windows.
 
+### Final Boss Spell Pressure
+**GIF: Evil Wizard Laser Wall Demo**
+![Evil Wizard laser wall demo](docs/gifs/evil-wizard-laser-wall-demo.gif)
+
+Shows the final boss's arena-wide laser-wall attack pattern and the vulnerability window that follows it.
+
 ### Arena Lifecycle
 **GIF: Arena Camera Lock Demo**
 ![Arena camera lock demo](docs/gifs/arena-camera-lock-demo.gif)
